@@ -41,7 +41,7 @@
     text-shadow: 0 0 12px #ffb000, 4px 4px 0 var(--rosa); letter-spacing: 0.06em; text-wrap: balance;
   }
   .sub { margin: -14px 0 0; color: var(--suave); font-size: 11px; letter-spacing: 0.2em; text-align: center; }
-  .juegos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; width: min(100%, 760px); }
+  .juegos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; width: min(100%, 1100px); }
   .juego {
     display: flex; flex-direction: column; gap: 14px; text-decoration: none; color: inherit;
     background: var(--tarjeta); border: 3px solid var(--borde); border-radius: 14px; padding: 18px;
@@ -71,13 +71,20 @@
       <p>Atrapa criaturas, entrénalas y vence a la Líder. Estilo Game Boy Color.</p>
       <span class="jugar">JUGAR ▶</span>
     </a>
+    <a class="juego" href="anime-rush/">
+      <canvas id="vista-anime" width="160" height="100"></canvas>
+      <h2>ANIME RUSH</h2>
+      <p>Peleas estilo Smash con 4 héroes de anime originales. 1 o 2 jugadores.</p>
+      <span class="jugar">JUGAR ▶</span>
+    </a>
   </div>
   <footer>Hecho por David Balladares mientras aprendía a programar.<br>Instálalo en tu iPad: Compartir → Agregar a pantalla de inicio.</footer>
 
   <script type="module">
     // Mini vistas previas dibujadas con los mismos datos de los juegos
     import { ESPECIES, INICIALES } from './monster-rush/src/datos/especies.js';
-    import { lienzo } from './monster-rush/src/graficos/texturas.js';
+    import { lienzo } from './compartido/pixelart.js';
+    import { LUCHADORES, arteDe } from './anime-rush/src/datos/luchadores.js';
 
     const snake = document.getElementById('vista-snake').getContext('2d');
     snake.fillStyle = '#000'; snake.fillRect(0, 0, 160, 100);
@@ -98,6 +105,15 @@
       const e = ESPECIES[id];
       const filas = e.arte.map((f) => f + [...f].reverse().join(''));
       mon.drawImage(lienzo(filas, e.paleta, 2), 12 + i * 48, 40);
+    });
+
+    const anime = document.getElementById('vista-anime').getContext('2d');
+    const noche = anime.createLinearGradient(0, 0, 0, 100);
+    noche.addColorStop(0, '#0a0a28'); noche.addColorStop(1, '#3a1a58');
+    anime.fillStyle = noche; anime.fillRect(0, 0, 160, 100);
+    anime.fillStyle = '#4fd8ff'; anime.fillRect(10, 86, 140, 3);
+    Object.keys(LUCHADORES).forEach((id, i) => {
+      anime.drawImage(lienzo(arteDe(id), LUCHADORES[id].paleta, 1.5), 14 + i * 34, 50);
     });
   </script>
 </body>
