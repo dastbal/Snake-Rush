@@ -98,3 +98,6 @@ button:disabled { opacity: 0.4; cursor: default; }
 #abajo { grid-column: 2; grid-row: 3; }
 @media (prefers-reduced-motion: reduce) { .flechas button, .grande { transition: none; } }
 body { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
+/* Créditos abajito */
+.creditos { margin: 0; font-size: 11px; color: var(--muted); text-align: center; letter-spacing: 0.05em; }

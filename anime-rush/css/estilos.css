@@ -156,3 +156,6 @@ body:not(.peleando) .mando { visibility: hidden; }
 .botones-ab button.pulsado { transform: translateY(5px); box-shadow: 0 1px 0 #070718; }
 
 @media (prefers-reduced-motion: reduce) { .perilla { transition: none; } }
+
+/* Créditos abajito */
+.creditos { margin: 6px 0 0; font-size: 9px; color: var(--suave); text-align: center; line-height: 1.6; }

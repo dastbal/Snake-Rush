@@ -1,6 +1,8 @@
 # Rush Arcade 🕹️
 
-Juegos retro para el navegador y el iPad, hechos con [Phaser](https://phaser.io) mientras aprendía a programar.
+Juegos retro para el navegador y el iPad, hechos con [Phaser](https://phaser.io) mientras aprendíamos a programar.
+
+**Autor:** David Balladares · **Coautor:** Leandro Rodríguez
 
 **Jugar:** https://dastbal.github.io/Snake-Rush/
 

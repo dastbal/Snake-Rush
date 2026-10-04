@@ -190,3 +190,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .flecha, .titulo-criaturas img { animation: none; }
 }
+
+/* Créditos abajito */
+body { flex-direction: column; gap: 10px; }
+.creditos { margin: 0; font-size: 9px; color: #b8a8e8; text-align: center; line-height: 1.6; }
