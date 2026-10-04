@@ -1,7 +1,7 @@
 {
-  "name": "Snake Rush",
-  "short_name": "Snake Rush",
-  "description": "Snake retro de arcade con personajes, niveles y poderes.",
+  "name": "Rush Arcade",
+  "short_name": "Rush Arcade",
+  "description": "Juegos retro: Snake Rush y Monster Rush.",
   "start_url": "./",
   "display": "fullscreen",
   "orientation": "any",

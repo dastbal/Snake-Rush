@@ -1,24 +1,14 @@
 /**
- * Tabla de los 5 mejores, guardada en el aparato del jugador (localStorage).
+ * Tabla de los 5 mejores, guardada en el aparato del jugador.
  */
+import { leer, guardar } from '../../../compartido/guardado.js';
+
 const CLAVE = 'snake-top5';
 const MAXIMO = 5;
 
 export function leerTop() {
-  try {
-    const datos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
-    return Array.isArray(datos) ? datos : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function guardarTop(lista) {
-  try {
-    localStorage.setItem(CLAVE, JSON.stringify(lista));
-  } catch (e) {
-    // Sin guardado (modo privado): el juego sigue funcionando
-  }
+  const datos = leer(CLAVE, []);
+  return Array.isArray(datos) ? datos : [];
 }
 
 /** El mejor puntaje guardado (0 si no hay). */
@@ -34,7 +24,7 @@ export function agregarRecord({ iniciales, puntos, personaje }) {
   const lista = leerTop();
   lista.push({ iniciales, puntos, cabeza: personaje });
   lista.sort((a, b) => b.puntos - a.puntos);
-  guardarTop(lista.slice(0, MAXIMO));
+  guardar(CLAVE, lista.slice(0, MAXIMO));
 }
 
 /** Pinta la tabla dentro de una lista <ol>. */

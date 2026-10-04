@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Snake Rush">
+<meta name="theme-color" content="#0d1210">
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<title>Snake Rush</title>
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<div class="maquina">
+  <div class="columna">
+    <div class="barra">
+      <button type="button" id="pausa" disabled>⏸ Pausa</button>
+      <div class="derecha">
+        <button type="button" id="completa" aria-label="Pantalla completa">⛶</button>
+        <button type="button" id="sonido" aria-pressed="false">🔊 Sonido</button>
+      </div>
+    </div>
+
+    <div class="pantalla">
+      <div id="juego"></div>
+      <p class="aviso" id="aviso" hidden></p>
+
+      <!-- Pantalla 1: Menú de inicio -->
+      <div class="cartel" id="menu">
+        <h1>SNAKE RUSH</h1>
+        <div class="grupo">
+          <p class="etiqueta">Personaje</p>
+          <div class="fila" id="cabezas"></div>
+        </div>
+        <div class="grupo">
+          <p class="etiqueta">Color del cuerpo</p>
+          <div class="fila" id="colores"></div>
+        </div>
+        <div class="grupo">
+          <p class="etiqueta">Dificultad</p>
+          <div class="fila" id="dificultades"></div>
+        </div>
+        <button type="button" class="grande" id="jugar">JUGAR</button>
+        <div class="grupo">
+          <p class="etiqueta">5 mejores</p>
+          <ol class="tabla" id="tabla-menu"></ol>
+        </div>
+        <p class="nota" id="info-personaje"></p>
+        <p class="nota">Cada mundo tiene 3 niveles: subes a los 10 y 20 puntos. Desliza el dedo sobre el tablero o usa los botones.</p>
+      </div>
+
+      <!-- Pantalla 2: Pausa -->
+      <div class="cartel" id="pausado" hidden>
+        <h2>PAUSA</h2>
+        <button type="button" class="grande" id="seguir">SEGUIR</button>
+        <button type="button" id="salir">Volver al menú</button>
+      </div>
+
+      <!-- Pantalla 3: Game Over -->
+      <div class="cartel" id="fin" hidden>
+        <h2>GAME OVER</h2>
+        <p id="resumen"></p>
+        <form class="grupo" id="form-record" hidden>
+          <p class="etiqueta">¡Entraste a los 5 mejores! Tus iniciales:</p>
+          <div class="fila">
+            <input id="iniciales" maxlength="3" autocomplete="off" aria-label="Iniciales" placeholder="AAA">
+            <button type="submit">Guardar</button>
+          </div>
+        </form>
+        <div class="grupo">
+          <p class="etiqueta">5 mejores</p>
+          <ol class="tabla" id="tabla-fin"></ol>
+        </div>
+        <div class="fila">
+          <button type="button" class="grande" id="otra-vez">OTRA VEZ</button>
+          <button type="button" id="al-menu">Menú</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flechas">
+    <button type="button" id="arriba" aria-label="Arriba">▲</button>
+    <button type="button" id="izquierda" aria-label="Izquierda">◀</button>
+    <span class="centro" aria-hidden="true"></span>
+    <button type="button" id="derecha" aria-label="Derecha">▶</button>
+    <button type="button" id="abajo" aria-label="Abajo">▼</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

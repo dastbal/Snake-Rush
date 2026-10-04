@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1430">
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<title>Monster Rush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <main class="consola">
+    <div class="marco">
+      <div class="pantalla">
+        <div id="juego"></div>
+        <div id="capa"></div>
+      </div>
+    </div>
+    <p class="marca">MONSTER RUSH <span>COLOR</span></p>
+    <div class="botones">
+      <a class="boton" href="../">← ARCADE</a>
+      <button type="button" class="boton" id="boton-sonido" aria-label="Sonido" aria-pressed="false">🔊</button>
+      <button type="button" class="boton boton-menu" id="boton-menu">MENÚ</button>
+    </div>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

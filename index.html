@@ -1,97 +1,104 @@
 <!doctype html>
-<html lang="es"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Snake Rush">
-<meta name="theme-color" content="#0d1210">
+<meta name="apple-mobile-web-app-title" content="Rush Arcade">
+<meta name="theme-color" content="#0d0b1a">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-180.png">
-<title>Snake Rush</title>
-<link rel="stylesheet" href="css/estilos.css">
+<title>Rush Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  /* Sala de arcade: marquesina de neón y una ficha por juego */
+  :root {
+    --fondo: #0d0b1a;
+    --tarjeta: #1b1730;
+    --borde: #3a3160;
+    --texto: #ece8ff;
+    --suave: #9a90c8;
+    --amarillo: #ffd84d;
+    --rosa: #ff4f9a;
+    --pixel: "Press Start 2P", ui-monospace, "Courier New", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--fondo); color: var(--texto); font-family: var(--pixel);
+    padding-inline: 16px;
+    padding-block: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+    background-image: radial-gradient(circle at 50% 0%, #2a1f5a 0%, transparent 60%);
+  }
+  h1 {
+    margin: 0; font-size: clamp(26px, 8vw, 52px); text-align: center; line-height: 1.2; color: var(--amarillo);
+    text-shadow: 0 0 12px #ffb000, 4px 4px 0 var(--rosa); letter-spacing: 0.06em; text-wrap: balance;
+  }
+  .sub { margin: -14px 0 0; color: var(--suave); font-size: 11px; letter-spacing: 0.2em; text-align: center; }
+  .juegos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; width: min(100%, 760px); }
+  .juego {
+    display: flex; flex-direction: column; gap: 14px; text-decoration: none; color: inherit;
+    background: var(--tarjeta); border: 3px solid var(--borde); border-radius: 14px; padding: 18px;
+    transition: transform 120ms, border-color 120ms; min-width: 0;
+  }
+  .juego:hover, .juego:focus-visible { transform: translateY(-4px); border-color: var(--amarillo); outline: none; }
+  .juego canvas { width: 100%; aspect-ratio: 16 / 10; image-rendering: pixelated; border-radius: 8px; }
+  .juego h2 { margin: 0; font-size: 16px; color: var(--amarillo); }
+  .juego p { margin: 0; font-size: 10px; line-height: 1.8; color: var(--suave); }
+  .jugar { align-self: flex-start; font-size: 11px; background: var(--rosa); color: #fff; padding: 10px 14px; border-radius: 999px; box-shadow: 0 3px 0 #9a1f55; }
+  footer { font-size: 9px; color: var(--suave); text-align: center; line-height: 2; }
+</style>
 </head>
 <body>
-
-<div class="maquina">
-  <div class="columna">
-    <div class="barra">
-      <button type="button" id="pausa" disabled>⏸ Pausa</button>
-      <div class="derecha">
-        <button type="button" id="completa" aria-label="Pantalla completa">⛶</button>
-        <button type="button" id="sonido" aria-pressed="false">🔊 Sonido</button>
-      </div>
-    </div>
-
-    <div class="pantalla">
-      <div id="juego"></div>
-      <p class="aviso" id="aviso" hidden></p>
-
-      <!-- Pantalla 1: Menú de inicio -->
-      <div class="cartel" id="menu">
-        <h1>SNAKE RUSH</h1>
-        <div class="grupo">
-          <p class="etiqueta">Personaje</p>
-          <div class="fila" id="cabezas"></div>
-        </div>
-        <div class="grupo">
-          <p class="etiqueta">Color del cuerpo</p>
-          <div class="fila" id="colores"></div>
-        </div>
-        <div class="grupo">
-          <p class="etiqueta">Dificultad</p>
-          <div class="fila" id="dificultades"></div>
-        </div>
-        <button type="button" class="grande" id="jugar">JUGAR</button>
-        <div class="grupo">
-          <p class="etiqueta">5 mejores</p>
-          <ol class="tabla" id="tabla-menu"></ol>
-        </div>
-        <p class="nota" id="info-personaje"></p>
-        <p class="nota">Cada mundo tiene 3 niveles: subes a los 10 y 20 puntos. Desliza el dedo sobre el tablero o usa los botones.</p>
-      </div>
-
-      <!-- Pantalla 2: Pausa -->
-      <div class="cartel" id="pausado" hidden>
-        <h2>PAUSA</h2>
-        <button type="button" class="grande" id="seguir">SEGUIR</button>
-        <button type="button" id="salir">Volver al menú</button>
-      </div>
-
-      <!-- Pantalla 3: Game Over -->
-      <div class="cartel" id="fin" hidden>
-        <h2>GAME OVER</h2>
-        <p id="resumen"></p>
-        <form class="grupo" id="form-record" hidden>
-          <p class="etiqueta">¡Entraste a los 5 mejores! Tus iniciales:</p>
-          <div class="fila">
-            <input id="iniciales" maxlength="3" autocomplete="off" aria-label="Iniciales" placeholder="AAA">
-            <button type="submit">Guardar</button>
-          </div>
-        </form>
-        <div class="grupo">
-          <p class="etiqueta">5 mejores</p>
-          <ol class="tabla" id="tabla-fin"></ol>
-        </div>
-        <div class="fila">
-          <button type="button" class="grande" id="otra-vez">OTRA VEZ</button>
-          <button type="button" id="al-menu">Menú</button>
-        </div>
-      </div>
-    </div>
+  <h1>RUSH ARCADE</h1>
+  <p class="sub">ELIGE TU JUEGO</p>
+  <div class="juegos">
+    <a class="juego" href="snake/">
+      <canvas id="vista-snake" width="160" height="100"></canvas>
+      <h2>SNAKE RUSH</h2>
+      <p>La serpiente clásica con 6 personajes, niveles y poderes.</p>
+      <span class="jugar">JUGAR ▶</span>
+    </a>
+    <a class="juego" href="monster-rush/">
+      <canvas id="vista-monster" width="160" height="100"></canvas>
+      <h2>MONSTER RUSH</h2>
+      <p>Atrapa criaturas, entrénalas y vence a la Líder. Estilo Game Boy Color.</p>
+      <span class="jugar">JUGAR ▶</span>
+    </a>
   </div>
+  <footer>Hecho por David Balladares mientras aprendía a programar.<br>Instálalo en tu iPad: Compartir → Agregar a pantalla de inicio.</footer>
 
-  <div class="flechas">
-    <button type="button" id="arriba" aria-label="Arriba">▲</button>
-    <button type="button" id="izquierda" aria-label="Izquierda">◀</button>
-    <span class="centro" aria-hidden="true"></span>
-    <button type="button" id="derecha" aria-label="Derecha">▶</button>
-    <button type="button" id="abajo" aria-label="Abajo">▼</button>
-  </div>
-</div>
+  <script type="module">
+    // Mini vistas previas dibujadas con los mismos datos de los juegos
+    import { ESPECIES, INICIALES } from './monster-rush/src/datos/especies.js';
+    import { lienzo } from './monster-rush/src/graficos/texturas.js';
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
-<script type="module" src="src/main.js"></script>
+    const snake = document.getElementById('vista-snake').getContext('2d');
+    snake.fillStyle = '#000'; snake.fillRect(0, 0, 160, 100);
+    snake.strokeStyle = '#1c2a22';
+    for (let i = 0; i <= 16; i++) { snake.beginPath(); snake.moveTo(i * 10, 0); snake.lineTo(i * 10, 100); snake.stroke(); }
+    for (let j = 0; j <= 10; j++) { snake.beginPath(); snake.moveTo(0, j * 10); snake.lineTo(160, j * 10); snake.stroke(); }
+    [[3, 6], [4, 6], [5, 6], [6, 6], [6, 5], [6, 4], [7, 4], [8, 4], [9, 4]].forEach(([x, y], i) => {
+      snake.fillStyle = i % 2 ? '#36b552' : '#3ecf5c';
+      snake.fillRect(x * 10 + 1, y * 10 + 1, 8, 8);
+    });
+    snake.fillStyle = '#e53935'; snake.fillRect(121, 41, 8, 8);
+
+    const mon = document.getElementById('vista-monster').getContext('2d');
+    const cielo = mon.createLinearGradient(0, 0, 0, 100);
+    cielo.addColorStop(0, '#78c0f8'); cielo.addColorStop(0.6, '#b8e0ff'); cielo.addColorStop(0.61, '#88d070'); cielo.addColorStop(1, '#68b850');
+    mon.fillStyle = cielo; mon.fillRect(0, 0, 160, 100);
+    INICIALES.forEach((id, i) => {
+      const e = ESPECIES[id];
+      const filas = e.arte.map((f) => f + [...f].reverse().join(''));
+      mon.drawImage(lienzo(filas, e.paleta, 2), 12 + i * 48, 40);
+    });
+  </script>
 </body>
 </html>
