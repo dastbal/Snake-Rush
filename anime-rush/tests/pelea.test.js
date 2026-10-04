@@ -269,3 +269,14 @@ test('B solo (sin ▼ ▶) es el especial normal', () => {
   correr(p, 0.1, [toque('B'), nada]);
   assert.equal(eventos.find(([n]) => n === 'especial')[1].super, false);
 });
+
+test('cadena A-A-A con toques lentos (como en el iPad) también funciona', () => {
+  const eventos = [];
+  const p = nueva({ emitir: (n, d) => eventos.push([n, d]) });
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 26;
+  a.mira = 1;
+  correr(p, 2, [guion([[0, { A: true }], [0.45, { A: true }], [0.9, { A: true }]]), nada]);
+  const pasos = eventos.filter(([n]) => n === 'cadena').map(([, d]) => d.paso);
+  assert.deepEqual(pasos, [2, 3]);
+});

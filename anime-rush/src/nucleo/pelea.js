@@ -26,9 +26,9 @@ const INVENCIBLE_AL_VOLVER = 2;
 
 /** Combos: tiempos y fuerza de cada forma de golpe. */
 export const COMBOS = {
-  ventanaCadena: 0.3,   // segundos para apretar A otra vez y seguir la cadena A-A-A
+  ventanaCadena: 0.6,   // segundos para apretar A otra vez y seguir la cadena A-A-A
   ventanaContador: 1.0, // golpes con menos de 1 s entre sí cuentan para "N HITS!"
-  ventanaSuper: 0.7,    // ▼, ▶ y B deben apretarse dentro de este tiempo
+  ventanaSuper: 1.2,    // ▼, ▶ y B deben apretarse dentro de este tiempo
   potenciaSuper: 2,
   enfriamientoSuper: 1,
 };
@@ -140,7 +140,7 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
   function iniciarGolpe(l, ent, paso = 1) {
     const g = LUCHADORES[l.personaje].golpe;
     let forma = 'recto';
-    if (ent.arriba) forma = 'arriba';
+    if (ent.arriba) forma = 'arriba'; // también en el aire: ▲ saltó primero y luego A
     else if (ent.abajo && l.enSuelo) forma = 'barrida';
     else if (!l.enSuelo) forma = 'aereo';
     if (forma !== 'recto') paso = 1;
@@ -294,8 +294,11 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
       l.y += 2;
     }
 
-    if (l.enfriamiento > 0) return;
-    if (apreto('A')) {
+    // A apretada un poquito antes de tiempo se guarda (en el iPad es difícil acertar el momento justo)
+    if (apreto('A')) l.pideA = estado.tiempo + 0.3;
+    if (l.enfriamiento > 0 || l.ataque) return;
+    if (l.pideA > estado.tiempo) {
+      l.pideA = 0;
       // Si acaba de terminar un golpe de la cadena, sigue con el siguiente
       const sigue = !ent.arriba && !ent.abajo && l.enSuelo && estado.tiempo < l.cadena.hasta && l.cadena.paso < 3;
       iniciarGolpe(l, ent, sigue ? l.cadena.paso + 1 : 1);
