@@ -99,6 +99,8 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 - 32 personajes, 4 de cada anime: **Dragon Ball** (Goku, Vegeta, Gohan, Piccolo), **Naruto** (Naruto, Sasuke, Kakashi, Sakura), **One Piece** (Luffy, Zoro, Sanji, Nami), **Bleach** (Ichigo, Rukia, Renji, Byakuya), **Jujutsu Kaisen** (Yuji, Megumi, Nobara, Gojo), **My Hero Academia** (Deku, Bakugo, Todoroki, All Might), **Slime** (Rimuru, Benimaru, Shion, Milim) y **Demon Slayer** (Tanjiro, Nezuko, Zenitsu, Inosuke)
 - 4 escenarios: torneo en el cielo, aldea ninja, barco pirata y ciudad de noche
 - **A** golpe · **B** especial · **▲+B** súper salto para volver · doble salto · **▼** bajar de plataformas
+- **Combos:** **A-A-A** (el 3.er golpe lanza) · **▲+A** golpe hacia arriba · **▼+A** barrida · **A en el aire** patada aérea · contador **"3 HITS!"**
+- **Súper:** **▼ ▶ B** hace la versión SÚPER del especial (¡KAMEHAMEHA SÚPER!), el doble de fuerte
 - Más daño (%) = sales volando más lejos. Reglas por **vidas** o por **tiempo**
 - Objetos: onigiri (cura), bomba y esfera de poder (especial más fuerte)
 - 1 jugador contra 1 a 3 rivales de la compu (3 dificultades) o **2 jugadores** en el mismo iPad

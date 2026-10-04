@@ -34,6 +34,9 @@ export function crearSonido() {
     objeto: () => s.arpegio([C5, E5], 0.06),
     explosion: () => s.tono(90, 0.5, 'sawtooth', 0.2, 0, 30),
     fin: () => s.arpegio([C4, E4, G4, C5, E5, G4 * 2], 0.12),
+    /** Cada golpe del combo suena un poco más agudo. */
+    combo: (golpes) => s.tono(440 + golpes * 70, 0.06, 'square', 0.08),
+    super: () => { s.arpegio([C5, E5, G4 * 2, C5 * 2], 0.06, 'sawtooth', 0.09); s.tono(90, 0.5, 'sawtooth', 0.12, 0.2, 40); },
   };
 }
 
@@ -41,7 +44,8 @@ export function crearSonido() {
 export function conectarSonido(sonido, eventos) {
   eventos.en('golpe', ({ fuerza }) => sonido.golpe(fuerza));
   eventos.en('salto', () => sonido.salto());
-  eventos.en('especial', () => sonido.especial());
+  eventos.en('especial', (d) => (d.super ? sonido.super() : sonido.especial()));
+  eventos.en('combo', ({ golpes }) => sonido.combo(golpes));
   eventos.en('ko', () => sonido.ko());
   eventos.en('objeto', ({ tipo }) => (tipo === 'bomba' ? null : sonido.objeto()));
   eventos.en('explosion', () => sonido.explosion());

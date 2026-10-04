@@ -56,9 +56,15 @@ export class EscenaPelea extends Phaser.Scene {
       this.cameras.main.shake(200, 0.015);
     });
     ev.en('objeto', ({ x, y, tipo }) => this.texto(x, y - 20, OBJETOS[tipo].nombre.toUpperCase()));
-    ev.en('especial', ({ potencia }) => {
+    ev.en('especial', ({ potencia, super: esSuper, nombre, x, y }) => {
       if (potencia > 1) this.cameras.main.flash(150, 255, 200, 80);
+      if (esSuper) {
+        this.anuncio(`¡${nombre.toUpperCase()} SÚPER!`);
+        this.cameras.main.shake(250, 0.012);
+        this.chispa(x, y + 20, 3, 0xffd84d);
+      }
     });
+    ev.en('combo', ({ golpes, x, y }) => this.textoCombo(x, y, golpes));
   }
 
   /** El game loop: avanzar el motor y dibujar. */
@@ -117,8 +123,33 @@ export class EscenaPelea extends Phaser.Scene {
     if (!a) return;
     const datos = LUCHADORES[l.personaje];
     const pechoY = l.y - 28;
-    if (a.tipo === 'golpe') {
-      const alcance = datos.golpe.alcance * Math.min(1, a.t / 0.08);
+    if (a.tipo === 'golpe' && a.forma === 'arriba') {
+      // Golpe hacia arriba: un arco sobre la cabeza
+      g.lineStyle(4, datos.golpe.espada ? 0xe8f0ff : datos.paleta.S);
+      g.beginPath();
+      g.arc(l.x, l.y - 46, 18, Math.PI * 1.1, Math.PI * 1.9);
+      g.strokePath();
+    } else if (a.tipo === 'golpe' && a.forma === 'barrida') {
+      // Barrida: una línea a ras del suelo con polvo
+      const largo = (datos.golpe.alcance + 10) * Math.min(1, a.t / 0.08);
+      g.fillStyle(datos.paleta.F ?? 0x404040);
+      g.fillRect(l.mira > 0 ? l.x + 4 : l.x - 4 - largo, l.y - 8, largo, 5);
+      g.fillStyle(0xd8c8a8, 0.6);
+      g.fillCircle(l.x + l.mira * largo, l.y - 4, 4);
+    } else if (a.tipo === 'golpe' && a.forma === 'aereo') {
+      // Patada aérea: un remolino alrededor del cuerpo
+      g.lineStyle(3, 0xffffff, 0.8);
+      g.beginPath();
+      g.arc(l.x, l.y - 24, 24, tiempo / 40, tiempo / 40 + Math.PI * 1.3);
+      g.strokePath();
+    } else if (a.tipo === 'golpe') {
+      const remate = a.paso === 3;
+      const alcance = (datos.golpe.alcance + (remate ? 6 : 0)) * Math.min(1, a.t / 0.08);
+      if (remate) {
+        // 3.er golpe de la cadena: destello más grande
+        g.fillStyle(0xffd84d, 0.5);
+        g.fillCircle(l.x + l.mira * (10 + alcance), pechoY, 12);
+      }
       if (datos.golpe.espada) {
         g.lineStyle(3, 0xe8f0ff);
         g.beginPath();
@@ -218,6 +249,27 @@ export class EscenaPelea extends Phaser.Scene {
     this.tweens.add({ targets: rayo, scaleY: 0, alpha: 0, duration: 450, onComplete: () => rayo.destroy() });
     this.cameras.main.shake(300, 0.02);
     this.cameras.main.flash(120, 255, 255, 255);
+  }
+
+  /** "3 HITS!": crece con cada golpe del combo y cambia de color. */
+  textoCombo(x, y, golpes) {
+    const colores = ['#ffffff', '#ffe066', '#ffb020', '#ff6a3c', '#ff3c8a'];
+    const t = this.add.text(x, y - 8, `${golpes} HITS!`, {
+      fontFamily: '"Press Start 2P", monospace', fontSize: `${Math.min(14, 6 + golpes)}px`,
+      color: colores[Math.min(colores.length - 1, golpes - 2)], stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(10).setScale(1.4);
+    this.tweens.add({ targets: t, scale: 1, duration: 120, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, y: y - 26, alpha: 0, delay: 350, duration: 500, onComplete: () => t.destroy() });
+  }
+
+  /** Cartel grande en el centro (para los súper ataques). */
+  anuncio(mensaje) {
+    const t = this.add.text(ANCHO_MUNDO / 2, 70, mensaje, {
+      fontFamily: '"Press Start 2P", monospace', fontSize: '13px', color: '#ffd84d',
+      stroke: '#c8306a', strokeThickness: 5, align: 'center',
+    }).setOrigin(0.5).setDepth(11).setScale(0.4);
+    this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, alpha: 0, delay: 900, duration: 400, onComplete: () => t.destroy() });
   }
 
   texto(x, y, mensaje) {
