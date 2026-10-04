@@ -144,6 +144,15 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     else if (ent.abajo && l.enSuelo) forma = 'barrida';
     else if (!l.enSuelo) forma = 'aereo';
     if (forma !== 'recto') paso = 1;
+    // Ayuda: si no apretó ◀ ni ▶ y hay un rival muy cerca, el golpe se gira hacia él
+    if (!ent.izq && !ent.der) {
+      let cerca = null;
+      for (const otro of estado.luchadores) {
+        if (otro === l || otro.fuera || Math.abs(otro.y - l.y) > 50) continue;
+        if (Math.abs(otro.x - l.x) < 70 && (!cerca || Math.abs(otro.x - l.x) < Math.abs(cerca.x - l.x))) cerca = otro;
+      }
+      if (cerca && cerca.x !== l.x) l.mira = Math.sign(cerca.x - l.x);
+    }
     const duracion = g.duracion * (paso === 3 ? 1.25 : 1);
     l.ataque = { tipo: 'golpe', forma, paso, t: 0, duracion, golpeados: new Set(), encadenar: false };
     if (paso > 1) emitir('cadena', { quien: l.indice, paso });
