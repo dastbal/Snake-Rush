@@ -1,0 +1,100 @@
+/* Máquina arcade: pantalla de juego + panel de botones; lado a lado en horizontal */
+:root {
+  --bg: #0d1210;
+  --panel: #161e1a;
+  --line: #2a3a31;
+  --fg: #c8e6cf;
+  --muted: #7d9a86;
+  --acento: #ffd83a;
+  --rojo: #e0312b;
+  --font: "Courier New", ui-monospace, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding-inline: 16px; padding-block: 12px; box-sizing: border-box; gap: 10px;
+}
+.maquina { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; align-items: center; width: 100%; }
+.columna { display: flex; flex-direction: column; gap: 8px; width: min(100%, 520px, calc(100vh - 380px)); min-width: 260px; }
+@media (orientation: landscape) and (min-width: 700px) {
+  .columna { width: min(520px, calc(100vh - 90px)); }
+}
+
+/* Barra de arriba: pausa y sonido */
+.barra { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.barra .derecha { display: flex; gap: 8px; }
+.aviso {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5;
+  background: var(--panel); border: 2px solid var(--acento); border-radius: 8px; padding: 8px 12px;
+  font-size: 13px; width: max-content; max-width: 90%; text-align: center;
+}
+button {
+  font: inherit; font-size: 15px; color: var(--fg); background: var(--panel);
+  border: 2px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; min-height: 40px;
+  touch-action: manipulation;
+}
+button[aria-pressed="true"] { border-color: var(--fg); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+button:disabled { opacity: 0.4; cursor: default; }
+
+/* La pantalla: el canvas y los carteles encima */
+.pantalla { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; border: 3px solid #000; border-radius: 4px; overflow: hidden; touch-action: none; }
+#juego, #juego canvas { width: 100% !important; height: 100% !important; display: block; }
+.cartel {
+  position: absolute; inset: 0; background: rgba(5, 8, 7, 0.9); overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; box-sizing: border-box; text-align: center;
+}
+.cartel h1 { margin: 0; font-size: clamp(30px, 9vw, 48px); letter-spacing: 0.12em; color: var(--acento); text-shadow: 3px 3px 0 var(--rojo); }
+.cartel h2 { margin: 0; font-size: 26px; color: var(--rojo); letter-spacing: 0.1em; }
+.grupo { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.etiqueta { margin: 0; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.fila { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.color { width: 38px; min-height: 38px; padding: 0; }
+.grande {
+  font-size: 20px; font-weight: bold; padding: 10px 28px; color: #2a1a00; letter-spacing: 0.1em;
+  background: var(--acento); border-color: #000; box-shadow: 0 5px 0 #a8860f;
+}
+.grande:active { transform: translateY(4px); box-shadow: 0 1px 0 #a8860f; }
+.tabla { margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; min-width: 200px; }
+.tabla li { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; border-bottom: 1px dashed var(--line); }
+.tabla .vacia { color: var(--muted); justify-content: center; }
+#iniciales { font: inherit; font-size: 22px; width: 5ch; text-align: center; text-transform: uppercase; background: var(--panel); color: var(--fg); border: 2px solid var(--acento); border-radius: 6px; padding: 4px; }
+.nota { margin: 0; color: var(--muted); font-size: 13px; max-width: 32ch; }
+
+/* Panel de máquina arcade: base de metal con botones redondos de plástico */
+.flechas {
+  --boton: #e0312b; --boton-luz: #ff7a6b; --boton-sombra: #8a1410; --placa: #1b1b1f; --tornillo: #55555c;
+  display: grid; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px);
+  gap: 4px; justify-content: center; align-content: center;
+  padding: 14px; border-radius: 18px; position: relative;
+  background: linear-gradient(160deg, #2c2c33, var(--placa));
+  border: 3px solid #3a3a42; box-shadow: inset 0 2px 0 #4a4a52, 0 6px 0 #0a0a0c;
+}
+.flechas::before {
+  content: ""; position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--tornillo); top: 10px; left: 10px; box-shadow: 232px 0 0 var(--tornillo), 0 232px 0 var(--tornillo), 232px 232px 0 var(--tornillo);
+}
+.flechas button {
+  width: 64px; height: 64px; min-height: 0; margin: auto; padding: 0; border-radius: 50%;
+  border: 3px solid #111; color: #fff6e8; font-size: 22px; text-shadow: 0 1px 0 var(--boton-sombra);
+  background: radial-gradient(circle at 35% 30%, var(--boton-luz), var(--boton) 55%, var(--boton-sombra));
+  box-shadow: 0 7px 0 var(--boton-sombra), 0 9px 6px #000a;
+  transition: transform 60ms, box-shadow 60ms;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.flechas button:active, .flechas button.pulsado {
+  transform: translateY(6px); box-shadow: 0 1px 0 var(--boton-sombra), 0 2px 3px #000a;
+}
+.flechas .centro {
+  grid-column: 2; grid-row: 2; width: 34px; height: 34px; margin: auto; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #444, #111); box-shadow: inset 0 2px 4px #000;
+}
+#arriba { grid-column: 2; grid-row: 1; }
+#izquierda { grid-column: 1; grid-row: 2; }
+#derecha { grid-column: 3; grid-row: 2; }
+#abajo { grid-column: 2; grid-row: 3; }
+@media (prefers-reduced-motion: reduce) { .flechas button, .grande { transition: none; } }
+body { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }

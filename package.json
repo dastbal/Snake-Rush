@@ -1,0 +1,11 @@
+{
+  "name": "snake-rush",
+  "version": "2.1.0",
+  "description": "Snake retro de arcade con personajes, niveles y poderes.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.js"
+  }
+}
