@@ -1,6 +1,6 @@
 # 0008. Criaturas y nombres originales
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado · en Anime Rush lo reemplaza [0011](0011-personajes-de-anime-reales.md)
 - **Fecha:** 2026-10-04
 
 ## Contexto

@@ -27,6 +27,7 @@ Reglas:
 | [0005](adr/0005-textos-y-menus-en-html.md) | Textos y menús en HTML encima del canvas | Aceptado |
 | [0006](adr/0006-guardado-en-localstorage.md) | Guardado en localStorage | Aceptado |
 | [0007](adr/0007-combate-que-devuelve-pasos.md) | Motor de combate que devuelve "pasos" | Aceptado |
-| [0008](adr/0008-criaturas-originales.md) | Criaturas y nombres originales | Aceptado |
+| [0008](adr/0008-criaturas-originales.md) | Criaturas y nombres originales | Aceptado (en Anime Rush lo reemplaza 0011) |
 | [0009](adr/0009-mando-en-pantalla.md) | Mando en pantalla además de tocar el mapa | Aceptado |
 | [0010](adr/0010-motor-de-pelea-propio.md) | Motor de pelea propio (sin la física de Phaser) | Aceptado |
+| [0011](adr/0011-personajes-de-anime-reales.md) | Personajes de anime con sus nombres reales en Anime Rush | Aceptado |

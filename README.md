@@ -8,7 +8,7 @@ Juegos retro para el navegador y el iPad, hechos con [Phaser](https://phaser.io)
 |---|---|
 | 🐍 **Snake Rush** (`/snake/`) | La serpiente clásica con 6 personajes, 3 niveles por mundo y 5 poderes |
 | 👾 **Monster Rush** (`/monster-rush/`) | RPG estilo Game Boy Color: atrapa criaturas, entrénalas y vence a la Líder |
-| 🥊 **Anime Rush** (`/anime-rush/`) | Peleas estilo Smash con 4 héroes de anime originales, 1 o 2 jugadores |
+| 🥊 **Anime Rush** (`/anime-rush/`) | Peleas estilo Smash con 32 personajes de 8 animes, 1 o 2 jugadores (juego de fans) |
 
 Se instala como app: en iPad toca **Compartir → Agregar a pantalla de inicio**.
 
@@ -94,7 +94,7 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 
 ## 🥊 Anime Rush
 
-- 4 luchadores originales con estilo anime: **RAIKO** (onda de energía), **KAGE** (clon de sombra), **RUFO** (puño elástico) y **SAYA** (corte veloz)
+- 32 personajes, 4 de cada anime: **Dragon Ball** (Goku, Vegeta, Gohan, Piccolo), **Naruto** (Naruto, Sasuke, Kakashi, Sakura), **One Piece** (Luffy, Zoro, Sanji, Nami), **Bleach** (Ichigo, Rukia, Renji, Byakuya), **Jujutsu Kaisen** (Yuji, Megumi, Nobara, Gojo), **My Hero Academia** (Deku, Bakugo, Todoroki, All Might), **Slime** (Rimuru, Benimaru, Shion, Milim) y **Demon Slayer** (Tanjiro, Nezuko, Zenitsu, Inosuke)
 - 4 escenarios: torneo en el cielo, aldea ninja, barco pirata y ciudad de noche
 - **A** golpe · **B** especial · **▲+B** súper salto para volver · doble salto · **▼** bajar de plataformas
 - Más daño (%) = sales volando más lejos. Reglas por **vidas** o por **tiempo**
@@ -103,4 +103,6 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 
 **Cómo está hecho:** `nucleo/pelea.js` es un motor propio y puro ([ADR 0010](docs/adr/0010-motor-de-pelea-propio.md)); la IA aprieta los mismos botones que un jugador.
 
-**Agregar un luchador:** una entrada en `anime-rush/src/datos/luchadores.js` (cabeza de 11×16 letras + colores del cuerpo) y elegir su especial: `proyectil`, `clon`, `estirar` o `embestida`. **Un escenario:** `datos/escenarios.js` + un fondo en `graficos/fondos.js`.
+**Agregar un luchador:** una línea `luchador({...})` en su serie en `anime-rush/src/datos/luchadores.js`: elige un `pelo` y una `cara` de las piezas, sus colores y su especial (`proyectil`, `clon`, `estirar` o `embestida`).
+
+> ⚠️ **Juego de fans no oficial y gratuito.** Los personajes de Anime Rush pertenecen a sus creadores y editoriales; los dibujos son pixel art propio. Ver [ADR 0011](docs/adr/0011-personajes-de-anime-reales.md). **Un escenario:** `datos/escenarios.js` + un fondo en `graficos/fondos.js`.
