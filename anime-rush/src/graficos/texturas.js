@@ -13,7 +13,7 @@ export function crearTexturas(escena) {
       if (!escena.textures.exists(clave)) escena.textures.addCanvas(clave, canvas);
     };
     agregar(`l-${id}`, lienzo(arteDe(id), l.paleta, ESCALA));
-    // Versión "con poder" (por ejemplo, el pelo dorado de RAIKO al usar su especial)
+    // Versión "con poder" (por ejemplo, el pelo dorado de GOKU al usar su especial)
     agregar(`l-${id}-poder`, lienzo(arteDe(id), { ...l.paleta, ...(l.paletaPoder || {}) }, ESCALA));
   }
 }

@@ -75,7 +75,7 @@ body {
   text-shadow: 0.6cqw 0.6cqw 0 var(--rosa), 0 0 2cqw #ff9a00;
 }
 .retratos { display: flex; gap: 2cqw; }
-.retratos img { width: 9cqw; image-rendering: pixelated; filter: drop-shadow(0 0.5cqw 0 #000); }
+.retratos img { width: 6.5cqw; image-rendering: pixelated; filter: drop-shadow(0 0.5cqw 0 #000); }
 .jugar {
   font: inherit; font-size: 2.6cqw; color: #2a1000; background: var(--amarillo); cursor: pointer;
   border: 0; border-radius: 1cqw; padding: 1.6cqw 4cqw; box-shadow: 0 0.8cqw 0 #b08a10;

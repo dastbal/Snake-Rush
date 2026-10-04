@@ -21,14 +21,17 @@ import { crearMenus } from './interfaz/menus.js';
 import { crearMarcador } from './interfaz/marcador.js';
 import { crearMandos } from './interfaz/mando.js';
 
-/** Escena de portada: el escenario de la ciudad con los 4 luchadores. */
+/** Un personaje famoso de cada anime para la portada y el título. */
+const PORTADA = ['goku', 'naruto', 'luffy', 'ichigo', 'gojo', 'deku', 'rimuru', 'tanjiro'];
+
+/** Escena de portada: el escenario de la ciudad con un luchador de cada anime. */
 class EscenaPortada extends Phaser.Scene {
   constructor() { super('portada'); }
   create() {
     crearTexturas(this);
     FONDOS.ciudad(this.add.graphics());
-    Object.keys(LUCHADORES).forEach((id, i) => {
-      const img = this.add.image(120 + i * 80, 230, `l-${id}`).setOrigin(0.5, 1).setScale(1.5).setFlipX(i >= 2);
+    PORTADA.forEach((id, i) => {
+      const img = this.add.image(50 + i * 54, 230, `l-${id}`).setOrigin(0.5, 1).setScale(1.3).setFlipX(i >= 4);
       this.tweens.add({ targets: img, y: 226, duration: 400 + i * 60, yoyo: true, repeat: -1 });
     });
   }
@@ -61,9 +64,9 @@ const mandos = crearMandos({
 // ---------- Título ----------
 const titulo = document.getElementById('titulo');
 const retratos = titulo.querySelector('.retratos');
-for (const id of Object.keys(LUCHADORES)) {
+for (const id of PORTADA) {
   const img = document.createElement('img');
-  img.src = retrato(id, 4);
+  img.src = retrato(id, 3);
   img.alt = LUCHADORES[id].nombre;
   retratos.appendChild(img);
 }

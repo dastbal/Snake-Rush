@@ -74,11 +74,11 @@
     <a class="juego" href="anime-rush/">
       <canvas id="vista-anime" width="160" height="100"></canvas>
       <h2>ANIME RUSH</h2>
-      <p>Peleas estilo Smash con 4 héroes de anime originales. 1 o 2 jugadores.</p>
+      <p>Peleas estilo Smash con 32 personajes de 8 animes. 1 o 2 jugadores. Juego de fans.</p>
       <span class="jugar">JUGAR ▶</span>
     </a>
   </div>
-  <footer>Hecho por David Balladares mientras aprendía a programar.<br>Instálalo en tu iPad: Compartir → Agregar a pantalla de inicio.</footer>
+  <footer>Hecho por David Balladares mientras aprendía a programar.<br>Anime Rush es un juego de fans no oficial: los personajes pertenecen a sus creadores.<br>Instálalo en tu iPad: Compartir → Agregar a pantalla de inicio.</footer>
 
   <script type="module">
     // Mini vistas previas dibujadas con los mismos datos de los juegos
@@ -112,7 +112,7 @@
     noche.addColorStop(0, '#0a0a28'); noche.addColorStop(1, '#3a1a58');
     anime.fillStyle = noche; anime.fillRect(0, 0, 160, 100);
     anime.fillStyle = '#4fd8ff'; anime.fillRect(10, 86, 140, 3);
-    Object.keys(LUCHADORES).forEach((id, i) => {
+    ['goku', 'naruto', 'luffy', 'tanjiro'].forEach((id, i) => {
       anime.drawImage(lienzo(arteDe(id), LUCHADORES[id].paleta, 1.5), 14 + i * 34, 50);
     });
   </script>

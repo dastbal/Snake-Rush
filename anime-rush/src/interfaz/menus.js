@@ -3,7 +3,7 @@
  * título → modo → luchadores → rivales → escenario → reglas, y los resultados.
  * Cada pantalla es una Promesa; VOLVER regresa al paso anterior.
  */
-import { LUCHADORES } from '../datos/luchadores.js';
+import { LUCHADORES, SERIES } from '../datos/luchadores.js';
 import { ESCENARIOS } from '../datos/escenarios.js';
 import { NIVELES_IA } from '../nucleo/ia.js';
 import { retrato } from '../graficos/texturas.js';
@@ -60,9 +60,29 @@ export function crearMenus({ capa, sonido }) {
     });
   }
 
-  const opcionesLuchador = () => Object.entries(LUCHADORES).map(([id, l]) => ({
-    texto: l.nombre, detalle: `${l.lema} · B: ${l.especial.nombre}`, imagen: retrato(id, 3), color: l.color, valor: id,
-  }));
+  /**
+   * Elegir luchador en dos pasos: primero el anime, después el personaje.
+   * Devuelve el id del luchador, o VOLVER.
+   */
+  async function elegirLuchador(titulo) {
+    while (true) {
+      const serie = await elegir({
+        titulo: `${titulo}: ELIGE EL ANIME`, columnas: 4, clase: 'menu-luchadores',
+        opciones: Object.entries(SERIES).map(([id, s]) => ({
+          texto: s.nombre.toUpperCase(), imagen: retrato(Object.keys(s.luchadores)[0], 2), color: s.color, valor: id,
+        })),
+      });
+      if (serie === VOLVER) return VOLVER;
+      const id = await elegir({
+        titulo: `${titulo}: ${SERIES[serie].nombre.toUpperCase()}`, columnas: 4, clase: 'menu-luchadores',
+        opciones: Object.keys(SERIES[serie].luchadores).map((lid) => {
+          const l = LUCHADORES[lid];
+          return { texto: l.nombre, detalle: `${l.lema}\nB: ${l.especial.nombre}`, imagen: retrato(lid, 3), color: l.color, valor: lid };
+        }),
+      });
+      if (id !== VOLVER) return id;
+    }
+  }
 
   /**
    * Arma la configuración de la pelea paso a paso.
@@ -89,7 +109,7 @@ export function crearMenus({ capa, sonido }) {
         if (r === VOLVER) return null;
         c.humanos = r;
       } else if (paso === 'j1' || paso === 'j2') {
-        r = await elegir({ titulo: `${paso === 'j1' ? 'JUGADOR 1' : 'JUGADOR 2'}: ELIGE TU LUCHADOR`, opciones: opcionesLuchador(), columnas: 4, clase: 'menu-luchadores' });
+        r = await elegirLuchador(paso === 'j1' ? 'J1' : 'J2');
         if (r !== VOLVER) c[paso] = r;
       } else if (paso === 'rivales') {
         const min = c.humanos === 1 ? 1 : 0;

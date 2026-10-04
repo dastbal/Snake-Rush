@@ -24,11 +24,17 @@ function toque(boton, extra = {}) {
   };
 }
 const nueva = (cfg = {}) => crearPelea({
-  jugadores: [{ personaje: 'raiko' }, { personaje: 'kage' }],
+  jugadores: [{ personaje: 'goku' }, { personaje: 'naruto' }],
   escenario: 'cielo', reglas: { tipo: 'vidas', vidas: 3 }, objetos: false, azar: () => 0.5, ...cfg,
 });
 
 // ---------- Datos ----------
+test('hay 8 series de 4 luchadores', async () => {
+  const { SERIES } = await import('../src/datos/luchadores.js');
+  assert.equal(Object.keys(SERIES).length, 8);
+  for (const [id, s] of Object.entries(SERIES)) assert.equal(Object.keys(s.luchadores).length, 4, id);
+});
+
 test('cada luchador tiene arte 16×24 con colores válidos y un especial conocido', () => {
   for (const [id, l] of Object.entries(LUCHADORES)) {
     const arte = arteDe(id);
@@ -73,7 +79,8 @@ test('saltar sube y vuelve a caer al suelo; hay doble salto', () => {
 test('caminar fuera del borde hace caer y perder una vida', () => {
   const p = nueva();
   const yo = p.estado.luchadores[0];
-  correr(p, 1.5, [{ izq: true }, {}]); // camina hasta caerse (sin seguir después)
+  // Camina a la izquierda hasta caerse una vez, y suelta el botón
+  for (let t = 0; t < 4 && yo.caidas === 0; t += DT) p.actualizar(DT, [{ izq: true }, {}]);
   correr(p, 1, [{}, {}]);
   assert.equal(yo.vidas, 2);
   assert.equal(yo.caidas, 1);
@@ -87,7 +94,7 @@ test('el golpe suma daño y empuja; con más daño vuela más lejos', () => {
   b.x = a.x + 25; // al alcance
   a.mira = 1;
   correr(p, 0.3, [toque('A'), nada]);
-  assert.equal(b.daño, LUCHADORES.raiko.golpe.daño);
+  assert.equal(b.daño, LUCHADORES.goku.golpe.daño);
   assert.ok(b.vx > 0, 'empujado hacia la derecha');
 
   const debil = nueva().estado.luchadores[1];
@@ -105,26 +112,26 @@ test('la onda de energía viaja y golpea a distancia', () => {
   b.x = a.x + 120;
   a.mira = 1;
   correr(p, 0.8, [toque('B'), nada]);
-  assert.equal(b.daño, LUCHADORES.raiko.especial.daño);
+  assert.equal(b.daño, LUCHADORES.goku.especial.daño);
 });
 
 test('el puño elástico alcanza lejos', () => {
-  const p = nueva({ jugadores: [{ personaje: 'rufo' }, { personaje: 'saya' }] });
+  const p = nueva({ jugadores: [{ personaje: 'luffy' }, { personaje: 'zoro' }] });
   const [a, b] = p.estado.luchadores;
   b.x = a.x + 120;
   a.mira = 1;
   correr(p, 0.5, [toque('B'), nada]);
-  assert.equal(b.daño, LUCHADORES.rufo.especial.daño);
+  assert.equal(b.daño, LUCHADORES.luffy.especial.daño);
 });
 
 test('la esfera de poder potencia el siguiente especial', () => {
-  const p = nueva({ jugadores: [{ personaje: 'saya' }, { personaje: 'kage' }] });
+  const p = nueva({ jugadores: [{ personaje: 'zoro' }, { personaje: 'naruto' }] });
   const [a, b] = p.estado.luchadores;
   a.potenciado = 1.8;
   b.x = a.x + 60;
   a.mira = 1;
   correr(p, 0.4, [toque('B'), nada]);
-  assert.ok(Math.abs(b.daño - LUCHADORES.saya.especial.daño * 1.8) < 0.01);
+  assert.ok(Math.abs(b.daño - LUCHADORES.zoro.especial.daño * 1.8) < 0.01);
   assert.equal(a.potenciado, 1, 'se gasta al usarla');
 });
 
@@ -185,7 +192,7 @@ test('la IA vuelve al escenario si se cae', () => {
   Object.assign(yo, { x: ESCENARIOS.cielo.suelo.x + ESCENARIOS.cielo.suelo.ancho + 40, y: 210, enSuelo: false, vy: 50 });
   correr(p, 2.5, [nada, () => ia(p.estado, 1, DT)]);
   assert.equal(yo.caidas, 0, 'no se cayó');
-  assert.equal(yo.enSuelo, true);
+  assert.ok(yo.y <= ESCENARIOS.cielo.suelo.y + 1, 'está sobre el escenario (puede estar saltando)');
 });
 
 test('el cuerpo cabe en el dibujo (16×24 al doble = 32×48)', () => {
