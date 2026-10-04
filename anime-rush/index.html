@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a1e">
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-180.png">
+<title>Anime Rush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="barra">
+    <a class="chip" href="../">◀ ARCADE</a>
+    <span class="logo-chico">ANIME RUSH</span>
+    <div class="barra-der">
+      <button type="button" class="chip" id="boton-sonido" aria-label="Sonido" aria-pressed="false">🔊</button>
+      <button type="button" class="chip" id="boton-pausa" aria-label="Pausa">⏸</button>
+    </div>
+  </header>
+
+  <main class="arena">
+    <!-- Mandos: ver src/interfaz/mando.js -->
+    <div class="mando" id="mando-izq"></div>
+    <div class="pantalla">
+      <div id="juego"></div>
+      <div id="hud"></div>
+      <div id="capa">
+        <div class="titulo" id="titulo">
+          <h1>ANIME<br>RUSH</h1>
+          <div class="retratos"></div>
+          <button type="button" class="jugar" id="jugar">¡A PELEAR!</button>
+          <p class="nota">A: golpe · B: especial · ▲+B: volver al escenario</p>
+        </div>
+      </div>
+    </div>
+    <div class="mando" id="mando-der"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

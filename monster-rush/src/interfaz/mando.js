@@ -89,7 +89,11 @@ export function crearMando({ capa, ui, mundo, abrirMenu, sonido }) {
     const nombre = b.dataset.boton;
     b.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      b.setPointerCapture?.(e.pointerId);
+      try {
+        b.setPointerCapture(e.pointerId); // seguir al dedo aunque se salga del botón
+      } catch (error) {
+        // si el navegador no puede capturar, el botón funciona igual
+      }
       b.classList.add('pulsado');
       if (DIRECCIONES.includes(nombre)) presionarDireccion(nombre);
       else apretar(nombre);
