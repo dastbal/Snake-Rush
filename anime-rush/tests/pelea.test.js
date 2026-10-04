@@ -93,7 +93,7 @@ test('el golpe suma daño y empuja; con más daño vuela más lejos', () => {
   const [a, b] = p.estado.luchadores;
   b.x = a.x + 25; // al alcance
   a.mira = 1;
-  correr(p, 0.3, [toque('A'), nada]);
+  correr(p, 0.1, [toque('A'), nada]); // justo después del golpe
   assert.equal(b.daño, LUCHADORES.goku.golpe.daño);
   assert.ok(b.vx > 0, 'empujado hacia la derecha');
 
@@ -197,4 +197,75 @@ test('la IA vuelve al escenario si se cae', () => {
 
 test('el cuerpo cabe en el dibujo (32×51)', () => {
   assert.ok(CUERPO.ancho <= 32 && CUERPO.alto <= 51);
+});
+
+// ---------- Combos ----------
+/** Aprieta botones en distintos momentos: [[segundo, {botones}], ...] */
+function guion(pasos) {
+  let t = 0;
+  return () => {
+    t += DT;
+    const actual = pasos.find(([desde, , hasta = desde + DT * 2]) => t >= desde && t < hasta);
+    return actual ? actual[1] : {};
+  };
+}
+
+test('cadena A-A-A: tres golpes seguidos y el tercero lanza', () => {
+  const eventos = [];
+  const p = nueva({ emitir: (n, d) => eventos.push([n, d]) });
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 26;
+  a.mira = 1;
+  correr(p, 1.2, [guion([[0, { A: true }], [0.12, { A: true }], [0.3, { A: true }]]), nada]);
+  const pasos = eventos.filter(([n]) => n === 'cadena').map(([, d]) => d.paso);
+  assert.deepEqual(pasos, [2, 3], 'siguió la cadena hasta el 3.er golpe');
+  const g = LUCHADORES.goku.golpe;
+  assert.equal(b.daño, g.daño * 2 + Math.round(g.daño * 1.6), 'acertaron los tres');
+  const combos = eventos.filter(([n]) => n === 'combo').map(([, d]) => d.golpes);
+  assert.deepEqual(combos, [2, 3], 'el contador mostró 2 y 3 HITS');
+});
+
+test('▲+A golpea hacia arriba (para malabares)', () => {
+  const p = nueva();
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 4;
+  correr(p, 0.1, [toque('A', { arriba: true }), nada]);
+  assert.ok(b.vy < -200 && Math.abs(b.vx) < Math.abs(b.vy), 'sale hacia arriba');
+});
+
+test('▼+A es una barrida baja; A en el aire es una patada aérea', () => {
+  const p = nueva();
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 26;
+  a.mira = 1;
+  correr(p, 0.15, [toque('A', { abajo: true }), nada]);
+  assert.equal(a.ataque?.forma ?? 'barrida', 'barrida');
+  assert.ok(b.daño > 0 && Math.abs(b.vy) < Math.abs(b.vx), 'empuje casi horizontal');
+
+  const p2 = nueva();
+  const [c, d] = p2.estado.luchadores;
+  Object.assign(c, { enSuelo: false, y: 120, vy: 0 });
+  Object.assign(d, { enSuelo: false, y: 120, vy: 0, x: c.x + 20 });
+  p2.actualizar(DT, [{ A: true }, {}]);
+  assert.equal(c.ataque.forma, 'aereo');
+});
+
+test('súper combo ▼ ▶ B: el especial sale el doble de fuerte', () => {
+  const eventos = [];
+  const p = nueva({ emitir: (n, d) => eventos.push([n, d]) });
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 120;
+  a.mira = 1;
+  // 0,7 s: justo después del impacto (con más tiempo, el súper lo saca del escenario y su daño vuelve a 0)
+  correr(p, 0.7, [guion([[0, { abajo: true }], [0.1, { der: true }], [0.2, { B: true }]]), nada]);
+  const esp = eventos.find(([n]) => n === 'especial')[1];
+  assert.equal(esp.super, true);
+  assert.equal(b.daño, LUCHADORES.goku.especial.daño * 2);
+});
+
+test('B solo (sin ▼ ▶) es el especial normal', () => {
+  const eventos = [];
+  const p = nueva({ emitir: (n, d) => eventos.push([n, d]) });
+  correr(p, 0.1, [toque('B'), nada]);
+  assert.equal(eventos.find(([n]) => n === 'especial')[1].super, false);
 });

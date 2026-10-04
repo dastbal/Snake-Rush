@@ -23,6 +23,15 @@ export const FISICA = {
 export const CUERPO = { ancho: 22, alto: 48 };
 
 const INVENCIBLE_AL_VOLVER = 2;
+
+/** Combos: tiempos y fuerza de cada forma de golpe. */
+export const COMBOS = {
+  ventanaCadena: 0.3,   // segundos para apretar A otra vez y seguir la cadena A-A-A
+  ventanaContador: 1.0, // golpes con menos de 1 s entre sí cuentan para "N HITS!"
+  ventanaSuper: 0.7,    // ▼, ▶ y B deben apretarse dentro de este tiempo
+  potenciaSuper: 2,
+  enfriamientoSuper: 1,
+};
 const RECUPERACION = { impulso: 640, duracion: 0.35, daño: 5, empuje: 300, angulo: 80 };
 
 const rad = (g) => (g * Math.PI) / 180;
@@ -69,6 +78,10 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     potenciado: 1,
     atraviesaHasta: 0,
     ultimoGolpe: null,
+    combo: 0,             // golpes seguidos acertados
+    ultimoAcierto: -99,
+    cadena: { paso: 0, hasta: -1 }, // cadena A-A-A
+    teclas: [],           // últimas direcciones apretadas (para el súper combo ▼ ▶ B)
     fuera: false,
     previa: {},
   }));
@@ -96,7 +109,14 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     objetivo.aturdido = Math.min(1.2, fuerza / 900);
     objetivo.enSuelo = false;
     objetivo.ataque = null;
-    if (atacante) objetivo.ultimoGolpe = { quien: atacante.indice, tiempo: estado.tiempo };
+    if (atacante) {
+      objetivo.ultimoGolpe = { quien: atacante.indice, tiempo: estado.tiempo };
+      // Contador de combo: golpes seguidos con poco tiempo entre sí
+      const seguido = estado.tiempo - atacante.ultimoAcierto < COMBOS.ventanaContador;
+      atacante.combo = seguido ? atacante.combo + 1 : 1;
+      atacante.ultimoAcierto = estado.tiempo;
+      if (atacante.combo >= 2) emitir('combo', { quien: atacante.indice, golpes: atacante.combo, x: atacante.x, y: atacante.y - CUERPO.alto });
+    }
     emitir('golpe', { objetivo: objetivo.indice, atacante: atacante?.indice ?? null, x: objetivo.x, y: objetivo.y - CUERPO.alto / 2, fuerza });
     return true;
   }
@@ -113,18 +133,62 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
   }
 
   // ---------- Ataques ----------
-  function iniciarGolpe(l) {
+  /**
+   * Golpe (A). La forma depende de la dirección y de si está en el aire:
+   *  recto (cadena A-A-A) · arriba (▲+A) · barrida (▼+A en el suelo) · aereo (A en el aire)
+   */
+  function iniciarGolpe(l, ent, paso = 1) {
     const g = LUCHADORES[l.personaje].golpe;
-    l.ataque = { tipo: 'golpe', t: 0, duracion: g.duracion, golpeados: new Set() };
+    let forma = 'recto';
+    if (ent.arriba) forma = 'arriba';
+    else if (ent.abajo && l.enSuelo) forma = 'barrida';
+    else if (!l.enSuelo) forma = 'aereo';
+    if (forma !== 'recto') paso = 1;
+    const duracion = g.duracion * (paso === 3 ? 1.25 : 1);
+    l.ataque = { tipo: 'golpe', forma, paso, t: 0, duracion, golpeados: new Set(), encadenar: false };
+    if (paso > 1) emitir('cadena', { quien: l.indice, paso });
   }
 
-  function iniciarEspecial(l) {
+  /** Caja y fuerza de cada forma de golpe. */
+  function datosGolpe(l) {
+    const g = LUCHADORES[l.personaje].golpe;
+    const a = l.ataque;
+    const delante = (ancho) => (l.mira > 0 ? l.x + 8 : l.x - 8 - ancho);
+    switch (a.forma) {
+      case 'arriba':
+        return { caja: { x: l.x - 16, y: l.y - 74, w: 32, h: 36 }, golpe: { daño: g.daño + 1, empuje: 290, angulo: 88 } };
+      case 'barrida':
+        return { caja: { x: delante(g.alcance + 10), y: l.y - 14, w: g.alcance + 10, h: 14 }, golpe: { daño: g.daño, empuje: 270, angulo: 14 } };
+      case 'aereo':
+        return { caja: { x: l.x - 24, y: l.y - 48, w: 48, h: 46 }, golpe: { daño: g.daño, empuje: 280, angulo: 40 } };
+      default: {
+        // Cadena: el 3.er golpe es más fuerte y lanza hacia arriba
+        const remate = a.paso === 3;
+        return {
+          caja: { x: delante(g.alcance + (remate ? 6 : 0)), y: l.y - 38, w: g.alcance + (remate ? 6 : 0), h: 24 },
+          // Los golpes 1 y 2 empujan poco (el rival queda cerca para el siguiente)
+          golpe: remate
+            ? { daño: Math.round(g.daño * 1.6), empuje: g.empuje * 1.8, angulo: 50 }
+            : { daño: g.daño, empuje: g.empuje * 0.4, angulo: 20 },
+        };
+      }
+    }
+  }
+
+  /** Especial (B). Con el súper combo (▼ ▶ B) sale la versión SÚPER, el doble de fuerte. */
+  function iniciarEspecial(l, esSuper = false) {
     const e = LUCHADORES[l.personaje].especial;
-    const potencia = l.potenciado;
+    const potencia = l.potenciado * (esSuper ? COMBOS.potenciaSuper : 1);
     l.potenciado = 1;
     const duracion = e.tipo === 'proyectil' ? e.carga + 0.15 : e.duracion + 0.05;
-    l.ataque = { tipo: 'especial', especial: e.tipo, t: 0, duracion, golpeados: new Set(), potencia, x0: l.x, disparado: false };
-    emitir('especial', { quien: l.indice, tipo: e.tipo, potencia });
+    l.ataque = { tipo: 'especial', especial: e.tipo, t: 0, duracion, golpeados: new Set(), potencia, x0: l.x, disparado: false, super: esSuper };
+    emitir('especial', { quien: l.indice, tipo: e.tipo, potencia, super: esSuper, nombre: e.nombre, x: l.x, y: l.y - CUERPO.alto });
+  }
+
+  /** ¿Las últimas direcciones fueron ▼ y luego ◀/▶, hace poco? (súper combo) */
+  function hizoSuperCombo(l) {
+    const [a, b] = l.teclas.slice(-2);
+    return Boolean(a && b && a.boton === 'abajo' && b.boton === 'lado' && estado.tiempo - a.t < COMBOS.ventanaSuper);
   }
 
   function iniciarRecuperacion(l) {
@@ -143,10 +207,9 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     const datos = LUCHADORES[l.personaje];
 
     if (a.tipo === 'golpe') {
-      const g = datos.golpe;
-      if (a.t > 0.04 && a.t < g.duracion * 0.85) {
-        const x = l.mira > 0 ? l.x + 8 : l.x - 8 - g.alcance;
-        revisarCaja(l, { x, y: l.y - 38, w: g.alcance, h: 24 }, g);
+      if (a.t > 0.04 && a.t < a.duracion * 0.85) {
+        const { caja, golpe } = datosGolpe(l);
+        revisarCaja(l, caja, golpe);
       }
     } else if (a.tipo === 'recuperacion') {
       revisarCaja(l, { x: l.x - 18, y: l.y - 52, w: 36, h: 56 }, RECUPERACION);
@@ -183,7 +246,16 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     if (a.t >= a.duracion) {
       if (a.especial === 'embestida') l.vx *= 0.3;
       l.ataque = null;
-      l.enfriamiento = 0.12;
+      l.enfriamiento = a.super ? COMBOS.enfriamientoSuper : 0.12;
+      if (a.tipo === 'golpe' && a.forma === 'recto') {
+        if (a.encadenar && a.paso < 3) {
+          // Apretó A durante el golpe: sigue la cadena sin esperar
+          l.enfriamiento = 0;
+          iniciarGolpe(l, {}, a.paso + 1);
+        } else {
+          l.cadena = { paso: a.paso, hasta: estado.tiempo + COMBOS.ventanaCadena };
+        }
+      }
     }
   }
 
@@ -203,7 +275,8 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
       l.vx -= Math.sign(l.vx) * Math.min(Math.abs(l.vx), FISICA.frenoSuelo * dt);
     }
 
-    if (apreto('arriba') && !ent.B) {
+    // ▲ salta, salvo que se apriete junto con A o B (entonces es un ataque hacia arriba)
+    if (apreto('arriba') && !ent.B && !apreto('A')) {
       if (l.enSuelo) {
         l.vy = -s.salto;
         l.enSuelo = false;
@@ -222,10 +295,13 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     }
 
     if (l.enfriamiento > 0) return;
-    if (apreto('A')) iniciarGolpe(l);
-    else if (apreto('B')) {
+    if (apreto('A')) {
+      // Si acaba de terminar un golpe de la cadena, sigue con el siguiente
+      const sigue = !ent.arriba && !ent.abajo && l.enSuelo && estado.tiempo < l.cadena.hasta && l.cadena.paso < 3;
+      iniciarGolpe(l, ent, sigue ? l.cadena.paso + 1 : 1);
+    } else if (apreto('B')) {
       if (ent.arriba && !l.usoRecuperacion) iniciarRecuperacion(l);
-      else if (!ent.arriba) iniciarEspecial(l);
+      else if (!ent.arriba) iniciarEspecial(l, hizoSuperCombo(l));
     }
   }
 
@@ -376,6 +452,14 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
       const ent = entradas[i] || {};
       l.invencible = Math.max(0, l.invencible - dt);
       l.enfriamiento = Math.max(0, l.enfriamiento - dt);
+      // Recordar las últimas direcciones apretadas (para ▼ ▶ B)
+      const prev = l.previa;
+      if (ent.abajo && !prev.abajo) l.teclas.push({ boton: 'abajo', t: estado.tiempo });
+      if ((ent.der && !prev.der) || (ent.izq && !prev.izq)) l.teclas.push({ boton: 'lado', t: estado.tiempo });
+      if (l.teclas.length > 4) l.teclas.shift();
+      // A durante un golpe recto = encadenar el siguiente
+      if (l.ataque?.tipo === 'golpe' && l.ataque.forma === 'recto' && ent.A && !prev.A) l.ataque.encadenar = true;
+
       if (l.aturdido > 0) {
         l.aturdido = Math.max(0, l.aturdido - dt);
         l.vx *= 1 - Math.min(1, 1.2 * dt);
