@@ -11,6 +11,8 @@ Juegos retro para el navegador y el iPad, hechos con [Phaser](https://phaser.io)
 
 Se instala como app: en iPad toca **Compartir → Agregar a pantalla de inicio**.
 
+📚 **Documentación:** [docs/](docs/) — arquitectura, [cómo se guarda](docs/guardado.md), [cómo contribuir](docs/contribuir.md) y las [decisiones (ADRs)](docs/README.md#decisiones).
+
 ## Correrlo en tu computadora
 Los módulos de JavaScript necesitan un servidor (no funcionan con doble clic):
 
