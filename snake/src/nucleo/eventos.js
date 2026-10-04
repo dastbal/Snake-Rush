@@ -1,27 +1,5 @@
 /**
- * Un "megáfono" simple: una parte del juego grita un evento y las partes
- * que escuchan reaccionan. Así las reglas no necesitan saber de sonidos,
- * dibujos ni pantallas.
- *
- * Eventos que usa el juego:
- *  - 'inicio'   { nombreNivel }
- *  - 'comio'    { casilla, color, gana }
- *  - 'nivel'    { nivel, nombreNivel }
- *  - 'poder'    { casilla, poder }
- *  - 'rompio'   { casilla }
- *  - 'destello' {}
- *  - 'perdio'   { puntos, nivel }
+ * El "megáfono" de eventos ahora vive en compartido/ (lo usan varios juegos).
+ * Este archivo lo reexporta para que Snake Rush no cambie sus imports.
  */
-export function crearEventos() {
-  const oyentes = {};
-  return {
-    /** Escucha un evento. */
-    en(nombre, funcion) {
-      (oyentes[nombre] ||= []).push(funcion);
-    },
-    /** Grita un evento con datos. */
-    emitir(nombre, datos = {}) {
-      for (const funcion of oyentes[nombre] || []) funcion(datos);
-    },
-  };
-}
+export { crearEventos } from '../../../compartido/eventos.js';
