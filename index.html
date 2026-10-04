@@ -1,5 +1,14 @@
 <!doctype html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Snake Rush">
+<meta name="theme-color" content="#0d1210">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
 <title>Snake Rush</title>
 <style>
   /* Máquina arcade: pantalla de juego + panel de botones; lado a lado en horizontal */
@@ -28,7 +37,13 @@
   }
 
   /* Barra de arriba: pausa y sonido */
-  .barra { display: flex; justify-content: space-between; gap: 8px; }
+  .barra { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .barra .derecha { display: flex; gap: 8px; }
+  .aviso {
+    position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5;
+    background: var(--panel); border: 2px solid var(--acento); border-radius: 8px; padding: 8px 12px;
+    font-size: 13px; width: max-content; max-width: 90%; text-align: center;
+  }
   button {
     font: inherit; font-size: 15px; color: var(--fg); background: var(--panel);
     border: 2px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; min-height: 40px;
@@ -39,7 +54,7 @@
   button:disabled { opacity: 0.4; cursor: default; }
 
   /* La pantalla: el canvas y los carteles encima */
-  .pantalla { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; border: 3px solid #000; border-radius: 4px; overflow: hidden; }
+  .pantalla { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; border: 3px solid #000; border-radius: 4px; overflow: hidden; touch-action: none; }
   #juego, #juego canvas { width: 100% !important; height: 100% !important; display: block; }
   .cartel {
     position: absolute; inset: 0; background: rgba(5, 8, 7, 0.9); overflow-y: auto;
@@ -96,23 +111,28 @@
   #abajo { grid-column: 2; grid-row: 3; }
   @media (prefers-reduced-motion: reduce) { .flechas button, .grande { transition: none; } }
 </style>
+<style>body{padding-top:max(12px,env(safe-area-inset-top));padding-bottom:max(12px,env(safe-area-inset-bottom));}</style>
 </head><body>
 
 <div class="maquina">
   <div class="columna">
     <div class="barra">
       <button type="button" id="pausa" disabled>⏸ Pausa</button>
-      <button type="button" id="sonido" aria-pressed="false">🔊 Sonido</button>
+      <div class="derecha">
+        <button type="button" id="completa" aria-label="Pantalla completa">⛶</button>
+        <button type="button" id="sonido" aria-pressed="false">🔊 Sonido</button>
+      </div>
     </div>
 
     <div class="pantalla">
       <div id="juego"></div>
+      <p class="aviso" id="aviso" hidden></p>
 
       <!-- Pantalla 1: Menú de inicio -->
       <div class="cartel" id="menu">
         <h1>SNAKE RUSH</h1>
         <div class="grupo">
-          <p class="etiqueta">Cabeza</p>
+          <p class="etiqueta">Personaje</p>
           <div class="fila" id="cabezas"></div>
         </div>
         <div class="grupo">
@@ -128,7 +148,8 @@
           <p class="etiqueta">5 mejores</p>
           <ol class="tabla" id="tabla-menu"></ol>
         </div>
-        <p class="nota">Mario consigue ⭐ (invencible), Pikachu consigue ⚡ (rompe muros cercanos). La Clásica, ambos.</p>
+        <p class="nota" id="info-personaje"></p>
+        <p class="nota">Cada mundo tiene 3 niveles: subes a los 10 y 20 puntos. Desliza el dedo sobre el tablero o usa los botones.</p>
       </div>
 
       <!-- Pantalla 2: Pausa -->
@@ -178,6 +199,7 @@
   const CASILLA = 20;   // cada casilla mide 20×20 píxeles
   const COLUMNAS = 20;
   const FILAS = 20;
+  const PUNTOS_POR_NIVEL = 10; // nivel 2 a los 10 puntos, nivel 3 a los 20
 
   const COLORES = {
     Verde: 0x3ecf5c,
@@ -192,44 +214,38 @@
 
   // Los dibujos son de 10×10 "pixeles" (cada uno = 2 px reales).
   // Cada letra es un color de la paleta; "." es transparente.
-  const CABEZAS = {
-    Clásica: null, // se dibuja con el color del cuerpo y dos ojos
-    Pikachu: {
-      paleta: { Y: 0xffd83a, K: 0x111111, W: 0xffffff, R: 0xe8402a },
-      dibujo: [
-        'K........K',
-        'YK......KY',
-        'YYYYYYYYYY',
-        'YYYYYYYYYY',
-        'YKWYYYYKWY',
-        'YKKYYYYKKY',
-        'RRYYYKYYRR',
-        'RRYYYYYYRR',
-        'YYYKKKKYYY',
-        '.YYYYYYYY.',
-      ],
-    },
-    Mario: {
-      paleta: { R: 0xe52521, W: 0xffffff, S: 0xf8b878, B: 0x6b3a1e, K: 0x111111 },
-      dibujo: [
-        '..RRRRRR..',
-        '.RRRWWRRR.',
-        'RRRRRRRRRR',
-        'BBSSSKSSS.',
-        'BSBSSKSSSS',
-        'BSSSSSBSSS',
-        'BBSSSBBBBB',
-        '..SSSSSSS.',
-        '..SSSSSS..',
-        '...SSSS...',
-      ],
-    },
-  };
+  const HONGO = [
+    '...RRRR...',
+    '.RRWWRRRR.',
+    'RRWWWWRRWR',
+    'RRWWWWRRWR',
+    'RRRWWRRRRR',
+    'RWRRRRRWWR',
+    '..SSSSSS..',
+    '..SKSSKS..',
+    '..SSSSSS..',
+    '...SSSS...',
+  ];
+  const CARA_MARIO = [
+    '..RRRRRR..',
+    '.RRRWWRRR.',
+    'RRRRRRRRRR',
+    'BBSSSKSSS.',
+    'BSBSSKSSSS',
+    'BSSSSSBSSS',
+    'BBSSSBBBBB',
+    '..SSSSSSS.',
+    '..SSSSSS..',
+    '...SSSS...',
+  ];
 
-  // Cada cabeza tiene su comida, su muro y su poder
-  const MUNDOS = {
+  // Cada personaje tiene: cabeza, comida, muro, fondo, poderes y nombres de nivel
+  const PERSONAJES = {
     Clásica: {
-      poderes: ['estrella', 'rayo'],
+      cabeza: null, // se dibuja con el color del cuerpo y dos ojos
+      fondo: 'arcade',
+      poderes: ['estrella', 'rayo', 'iman', 'reloj', 'doble'],
+      niveles: ['Arcade', 'Esquinas', 'Pasillos'],
       comida: {
         paleta: { R: 0xe53935, D: 0x9e1b1b, G: 0x43a047, B: 0x6d4c41, W: 0xffcdd2 },
         dibujo: [
@@ -262,7 +278,24 @@
       },
     },
     Pikachu: {
-      poderes: ['rayo'],
+      cabeza: {
+        paleta: { Y: 0xffd83a, K: 0x111111, W: 0xffffff, R: 0xe8402a },
+        dibujo: [
+          'K........K',
+          'YK......KY',
+          'YYYYYYYYYY',
+          'YYYYYYYYYY',
+          'YKWYYYYKWY',
+          'YKKYYYYKKY',
+          'RRYYYKYYRR',
+          'RRYYYYYYRR',
+          'YYYKKKKYYY',
+          '.YYYYYYYY.',
+        ],
+      },
+      fondo: 'bosque',
+      poderes: ['rayo', 'reloj', 'doble'],
+      niveles: ['Bosque Verde', 'Claro del Bosque', 'Bosque Profundo'],
       comida: {
         paleta: { B: 0x3d6fe0, D: 0x24459c, W: 0xa9c4ff, G: 0x43a047 },
         dibujo: [
@@ -278,7 +311,7 @@
           '....DD....',
         ],
       },
-      muro: { // un árbol del bosque
+      muro: { // un árbol
         paleta: { G: 0x1b5e20, L: 0x2e7d32, T: 0x5d4037 },
         dibujo: [
           '...GGGG...',
@@ -295,22 +328,14 @@
       },
     },
     Mario: {
-      poderes: ['estrella'],
-      comida: {
-        paleta: { R: 0xe52521, W: 0xffffff, S: 0xf3d9a4, K: 0x111111 },
-        dibujo: [
-          '...RRRR...',
-          '.RRWWRRRR.',
-          'RRWWWWRRWR',
-          'RRWWWWRRWR',
-          'RRRWWRRRRR',
-          'RWRRRRRWWR',
-          '..SSSSSS..',
-          '..SKSSKS..',
-          '..SSSSSS..',
-          '...SSSS...',
-        ],
+      cabeza: {
+        paleta: { R: 0xe52521, W: 0xffffff, S: 0xf8b878, B: 0x6b3a1e, K: 0x111111 },
+        dibujo: CARA_MARIO,
       },
+      fondo: 'cielo',
+      poderes: ['estrella', 'iman', 'doble'],
+      niveles: ['Mundo 1-1', 'Mundo 1-2', 'Mundo 1-3'],
+      comida: { paleta: { R: 0xe52521, W: 0xffffff, S: 0xf3d9a4, K: 0x111111 }, dibujo: HONGO },
       muro: { // un ladrillo
         paleta: { B: 0xc84c0c, M: 0x4a1f04, L: 0xf0a070 },
         dibujo: [
@@ -327,11 +352,137 @@
         ],
       },
     },
+    Luigi: {
+      cabeza: {
+        paleta: { R: 0x2fa83a, W: 0xffffff, S: 0xf8b878, B: 0x6b3a1e, K: 0x111111 },
+        dibujo: CARA_MARIO,
+      },
+      fondo: 'subterraneo',
+      poderes: ['estrella', 'reloj', 'iman'],
+      niveles: ['Subterráneo 1', 'Subterráneo 2', 'Subterráneo 3'],
+      comida: { paleta: { R: 0x2fa83a, W: 0xffffff, S: 0xf3d9a4, K: 0x111111 }, dibujo: HONGO },
+      muro: { // una tubería
+        paleta: { K: 0x0b3d12, G: 0x3fbf4a, L: 0xa8f0a0, D: 0x1f7a2a },
+        dibujo: [
+          'KKKKKKKKKK',
+          'KLGGGGGGDK',
+          'KLGGGGGGDK',
+          'KKKKKKKKKK',
+          '.KLGGGGDK.',
+          '.KLGGGGDK.',
+          '.KLGGGGDK.',
+          '.KLGGGGDK.',
+          '.KLGGGGDK.',
+          '.KLGGGGDK.',
+        ],
+      },
+    },
+    Kirby: {
+      cabeza: {
+        paleta: { P: 0xffa6c9, K: 0x111111, B: 0x2a4bd0, R: 0xe0306a },
+        dibujo: [
+          '..PPPPPP..',
+          '.PPPPPPPP.',
+          'PPPKPPKPPP',
+          'PPPKPPKPPP',
+          'PPPBPPBPPP',
+          'PRRPPPPRRP',
+          'PPPPKKPPPP',
+          '.PPPPPPPP.',
+          'RRRPPPPRRR',
+          '.RR....RR.',
+        ],
+      },
+      fondo: 'dulce',
+      poderes: ['iman', 'doble', 'reloj'],
+      niveles: ['Tierra de Sueños', 'Nubes de Algodón', 'Castillo de Dulce'],
+      comida: { // una fresa
+        paleta: { R: 0xe8344e, W: 0xffe0a0, G: 0x43a047 },
+        dibujo: [
+          '...GGGG...',
+          '....GG....',
+          '..RRRRRR..',
+          '.RRWRRRWR.',
+          '.RRRRRRRR.',
+          '.RWRRRWRR.',
+          '..RRRRRR..',
+          '..RRWRRR..',
+          '...RRRR...',
+          '....RR....',
+        ],
+      },
+      muro: { // bloque estrella
+        paleta: { K: 0x7a4b00, Y: 0xffd84d, O: 0xff9a1f },
+        dibujo: [
+          'KKKKKKKKKK',
+          'KYYYYYYYYK',
+          'KYYYOYYYYK',
+          'KYYOOOYYYK',
+          'KYOOOOOYYK',
+          'KYYOOOYYYK',
+          'KYYOYOYYYK',
+          'KYYYYYYYYK',
+          'KYYYYYYYYK',
+          'KKKKKKKKKK',
+        ],
+      },
+    },
+    Sonic: {
+      cabeza: {
+        paleta: { B: 0x1e5bd8, W: 0xffffff, G: 0x2aa84a, S: 0xf5c99b, K: 0x111111 },
+        dibujo: [
+          '..BBBBB...',
+          '.BBBBBBBB.',
+          'BBBBWWWWB.',
+          'BBBWWGWGW.',
+          'BBBWWGWGW.',
+          'BBBSSSSSSK',
+          '.BBSSSSSS.',
+          'BBBBSKKSS.',
+          '.BBBBSSS..',
+          'B..BBBB...',
+        ],
+      },
+      fondo: 'greenhill',
+      poderes: ['estrella', 'doble', 'reloj'],
+      niveles: ['Green Hill 1', 'Green Hill 2', 'Green Hill 3'],
+      comida: { // un anillo
+        paleta: { Y: 0xffe14d, O: 0xd9a400 },
+        dibujo: [
+          '...YYYY...',
+          '..YOOOOY..',
+          '.YO....OY.',
+          'YO......OY',
+          'YO......OY',
+          'YO......OY',
+          'YO......OY',
+          '.YO....OY.',
+          '..YOOOOY..',
+          '...YYYY...',
+        ],
+      },
+      muro: { // púas
+        paleta: { S: 0x9aa3ad, W: 0xffffff, K: 0x444b52 },
+        dibujo: [
+          '....S.....',
+          '...SWS....',
+          '...SWS....',
+          '..SSWSS...',
+          '..SSWSS...',
+          '.SSSWSSS..',
+          '.SSSWSSS..',
+          'SSSSWSSSS.',
+          'KKKKKKKKKK',
+          'KKKKKKKKKK',
+        ],
+      },
+    },
   };
 
   const PODERES = {
     estrella: {
-      paleta: { Y: 0xffd700, K: 0x111111, O: 0xff9800 },
+      icono: '⭐', nombre: 'Estrella', duracion: 6000,
+      paleta: { Y: 0xffd700, K: 0x111111 },
       dibujo: [
         '....YY....',
         '....YY....',
@@ -346,6 +497,7 @@
       ],
     },
     rayo: {
+      icono: '⚡', nombre: 'Rayo', duracion: 0,
       paleta: { Y: 0xffeb3b, O: 0xff9800 },
       dibujo: [
         '.....YYYY.',
@@ -360,12 +512,84 @@
         'O.........',
       ],
     },
+    iman: {
+      icono: '🧲', nombre: 'Imán', duracion: 7000,
+      paleta: { R: 0xe53935, W: 0xd0d6dc },
+      dibujo: [
+        '.WW....WW.',
+        '.WW....WW.',
+        '.RR....RR.',
+        '.RR....RR.',
+        '.RR....RR.',
+        '.RRR..RRR.',
+        '..RRRRRR..',
+        '...RRRR...',
+        '..........',
+        '..........',
+      ],
+    },
+    reloj: {
+      icono: '⏱️', nombre: 'Reloj lento', duracion: 6000,
+      paleta: { K: 0x222222, W: 0xf4f4f4 },
+      dibujo: [
+        '...KKKK...',
+        '..KWWWWK..',
+        '.KWWKWWWK.',
+        'KWWWKWWWWK',
+        'KWWWKWWWWK',
+        'KWWWKKKWWK',
+        'KWWWWWWWWK',
+        '.KWWWWWWK.',
+        '..KWWWWK..',
+        '...KKKK...',
+      ],
+    },
+    doble: {
+      icono: '✖️2', nombre: 'Doble puntos', duracion: 8000,
+      paleta: { O: 0x8e44ad, W: 0xffffff },
+      dibujo: [
+        '.OOOOOOOO.',
+        'OOOOOOOOOO',
+        'OWOOOWWWOO',
+        'OOWOWOOOWO',
+        'OOOWOOOWOO',
+        'OOWOWOWOOO',
+        'OWOOOWWWWO',
+        'OOOOOOOOOO',
+        '.OOOOOOOO.',
+        '..........',
+      ],
+    },
   };
+
+  // Mapas de cada nivel: lista de casillas con muro.
+  // La fila 10 (donde empieza la serpiente) siempre queda libre.
+  function mapaNivel(nivel) {
+    const muros = [];
+    if (nivel === 1) {
+      // Esquinas: cuatro "L"
+      for (let i = 0; i < 4; i++) {
+        muros.push({ x: 3 + i, y: 3 }, { x: 3, y: 3 + i });
+        muros.push({ x: 16 - i, y: 3 }, { x: 16, y: 3 + i });
+        muros.push({ x: 3 + i, y: 16 }, { x: 3, y: 16 - i });
+        muros.push({ x: 16 - i, y: 16 }, { x: 16, y: 16 - i });
+      }
+    } else if (nivel >= 2) {
+      // Pasillos: dos barras con un hueco en el medio
+      for (let x = 3; x <= 16; x++) {
+        if (x === 9 || x === 10) continue;
+        muros.push({ x, y: 6 }, { x, y: 14 });
+      }
+    }
+    // quitar repetidos
+    return muros.filter((m, i) => muros.findIndex((o) => o.x === m.x && o.y === m.y) === i);
+  }
+  const VELOCIDAD_NIVEL = [1, 0.85, 0.72];
 
   // =====================================================================
   // 2. ESTADO DEL JUEGO (todo lo que "existe" en este momento)
   // =====================================================================
-  const eleccion = { color: 'Verde', cabeza: 'Clásica', dificultad: 'Normal' };
+  const eleccion = { color: 'Verde', personaje: 'Clásica', dificultad: 'Normal' };
 
   // modo: 'menu' | 'jugando' | 'pausa' | 'fin'
   let modo = 'menu';
@@ -373,11 +597,14 @@
   let direccion = { x: 1, y: 0 };
   let siguiente = { x: 1, y: 0 }; // giro pedido; se aplica en el próximo paso
   let comida = { x: 0, y: 0 };
-  let muros = [];       // obstáculos que aparecen con el tiempo
+  let muros = [];
   let poder = null;     // { x, y, tipo, hasta } o null
-  let invencibleHasta = 0;
+  let efectos = {};     // poderes activos: { estrella: hastaMs, ... }
   let puntos = 0;
-  let ultimoPaso = 0;   // cuándo fue el último paso (ms)
+  let nivel = 0;        // 0, 1, 2 (se muestra como 1, 2, 3)
+  let ultimoPaso = 0;
+  let esperaHasta = 0;  // pausa corta al cambiar de nivel
+  let explotada = false;
 
   const DIRECCIONES = {
     arriba: { x: 0, y: -1 },
@@ -386,15 +613,15 @@
     derecha: { x: 1, y: 0 },
   };
 
+  const mundo = () => PERSONAJES[eleccion.personaje];
+  const activo = (efecto, ahora) => (efectos[efecto] || 0) > ahora;
+
   // ---------- Ayudantes de casillas ----------
   const misma = (a, b) => a.x === b.x && a.y === b.y;
+  const esMuro = (c) => muros.some((m) => misma(m, c));
   const ocupada = (c) =>
-    serpiente.some((p) => misma(p, c)) ||
-    muros.some((m) => misma(m, c)) ||
-    misma(comida, c) ||
-    (poder && misma(poder, c));
+    serpiente.some((p) => misma(p, c)) || esMuro(c) || misma(comida, c) || (poder && misma(poder, c));
 
-  // Busca una casilla libre al azar, lejos de la cabeza (distancia mínima)
   function casillaLibre(distanciaMinima = 0) {
     const cabeza = serpiente[0];
     for (let intento = 0; intento < 500; intento++) {
@@ -402,27 +629,35 @@
       const distancia = Math.abs(c.x - cabeza.x) + Math.abs(c.y - cabeza.y);
       if (!ocupada(c) && distancia >= distanciaMinima) return c;
     }
-    return null; // tablero lleno
+    return null;
   }
 
   // =====================================================================
   // 3. REGLAS DEL JUEGO
   // =====================================================================
-  function empezar() {
+  function ponerNivel(n) {
+    nivel = n;
     serpiente = [{ x: 4, y: 10 }, { x: 3, y: 10 }, { x: 2, y: 10 }];
     direccion = { x: 1, y: 0 };
     siguiente = { x: 1, y: 0 };
-    muros = [];
+    muros = mapaNivel(n);
     poder = null;
-    invencibleHasta = 0;
-    puntos = 0;
     comida = { x: -1, y: -1 };
     comida = casillaLibre(3);
-    cambiarModo('jugando');
-    Sonido.musica(true);
   }
 
-  // El jugador pide girar. No dejamos dar media vuelta (se mordería).
+  function empezar() {
+    efectos = {};
+    puntos = 0;
+    explotada = false;
+    ponerNivel(0);
+    cambiarModo('jugando');
+    Sonido.musica(true);
+    const escena = juego.scene.getScene('GameScene');
+    esperaHasta = escena.time.now + 1000; // un segundo para prepararse
+    escena.anunciar(`NIVEL 1\n${mundo().niveles[0]}`);
+  }
+
   function girar(nombre) {
     if (modo !== 'jugando') return;
     const d = DIRECCIONES[nombre];
@@ -435,21 +670,18 @@
     direccion = siguiente;
     const cabeza = serpiente[0];
     const nueva = { x: cabeza.x + direccion.x, y: cabeza.y + direccion.y };
-    const invencible = ahora < invencibleHasta;
+    const invencible = activo('estrella', ahora);
 
-    // Choque con la pared: siempre pierdes
     const chocaPared = nueva.x < 0 || nueva.x >= COLUMNAS || nueva.y < 0 || nueva.y >= FILAS;
-
-    // Mordida: no cuenta la cola, que se mueve en este paso (salvo al comer)
     const vaAComer = misma(nueva, comida);
     const cuerpo = vaAComer ? serpiente : serpiente.slice(0, -1);
     const seMuerde = !invencible && cuerpo.some((p) => misma(p, nueva));
 
-    // Choque con un muro: con la estrella lo rompes
     const muroIndice = muros.findIndex((m) => misma(m, nueva));
     if (muroIndice >= 0 && invencible) {
       muros.splice(muroIndice, 1);
       Sonido.romper();
+      escena.chispas(nueva, 0xbbbbbb);
     }
     const chocaMuro = muroIndice >= 0 && !invencible;
 
@@ -461,8 +693,23 @@
     serpiente.unshift(nueva);
 
     if (vaAComer) {
-      puntos += 1;
+      const gana = activo('doble', ahora) ? 2 : 1;
+      puntos += gana;
       Sonido.comer();
+      const colorComida = Object.values(mundo().comida.paleta)[0];
+      escena.chispas(comida, colorComida);
+      escena.textoFlotante(comida, `+${gana}`);
+
+      // ¿Subió de nivel?
+      const nivelNuevo = Math.min(2, Math.floor(puntos / PUNTOS_POR_NIVEL));
+      if (nivelNuevo > nivel) {
+        ponerNivel(nivelNuevo);
+        esperaHasta = ahora + 1200;
+        Sonido.nivel();
+        escena.anunciar(`¡NIVEL ${nivelNuevo + 1}!\n${mundo().niveles[nivelNuevo]}`);
+        return;
+      }
+
       // Cada 3 puntos aparece un muro nuevo (lejos de tu cabeza)
       if (puntos % 3 === 0) {
         const m = casillaLibre(4);
@@ -470,38 +717,61 @@
       }
       // Cada 5 puntos aparece un poder, si no hay otro
       if (puntos % 5 === 0 && !poder) {
-        const opciones = MUNDOS[eleccion.cabeza].poderes;
+        const opciones = mundo().poderes;
         const c = casillaLibre(3);
         if (c) poder = { ...c, tipo: opciones[Math.floor(Math.random() * opciones.length)], hasta: ahora + 10000 };
       }
       comida = casillaLibre(0) || comida;
     } else {
-      serpiente.pop(); // no comió: quitamos la cola
+      serpiente.pop();
     }
 
     // ¿Agarró un poder?
     if (poder && misma(nueva, poder)) {
-      if (poder.tipo === 'estrella') {
-        invencibleHasta = ahora + 6000;
-      } else {
-        // Rayo: destruye los muros a 5 casillas o menos
+      const info = PODERES[poder.tipo];
+      if (poder.tipo === 'rayo') {
         muros = muros.filter((m) => Math.abs(m.x - nueva.x) + Math.abs(m.y - nueva.y) > 5);
         escena.cameras.main.flash(250, 255, 240, 120);
         escena.cameras.main.shake(200, 0.01);
+      } else {
+        efectos[poder.tipo] = ahora + info.duracion;
       }
+      escena.textoFlotante(poder, `${info.icono} ${info.nombre}`);
       Sonido.poder();
       poder = null;
     }
-    // Los poderes desaparecen si no los agarras a tiempo
     if (poder && ahora > poder.hasta) poder = null;
+
+    // Imán: la comida se acerca una casilla hacia tu cabeza
+    if (activo('iman', ahora)) {
+      const h = serpiente[0];
+      const dx = Math.sign(h.x - comida.x);
+      const dy = Math.sign(h.y - comida.y);
+      const pasoX = { x: comida.x + dx, y: comida.y };
+      const pasoY = { x: comida.x, y: comida.y + dy };
+      const libre = (c) => !serpiente.some((p) => misma(p, c)) && !esMuro(c) && !(poder && misma(poder, c));
+      const dist = Math.abs(h.x - comida.x) + Math.abs(h.y - comida.y);
+      if (dist > 1) {
+        if (dx !== 0 && libre(pasoX)) comida = pasoX;
+        else if (dy !== 0 && libre(pasoY)) comida = pasoY;
+      }
+    }
   }
 
   function perder(escena) {
-    escena.cameras.main.shake(250, 0.015);
+    escena.cameras.main.shake(300, 0.015);
+    escena.explotar();
+    explotada = true;
     Sonido.musica(false);
     Sonido.perder();
-    cambiarModo('fin');
-    mostrarFin();
+    modo = 'fin';
+    $('pausa').disabled = true;
+    // Mostramos el cartel después de ver la explosión
+    setTimeout(() => {
+      if (modo !== 'fin') return;
+      cambiarModo('fin');
+      mostrarFin();
+    }, 900);
   }
 
   // =====================================================================
@@ -517,35 +787,65 @@
     });
   }
 
-  // El fondo cambia según la cabeza
+  function cuadros(g, a, b) {
+    for (let x = 0; x < COLUMNAS; x++) {
+      for (let y = 0; y < FILAS; y++) {
+        g.fillStyle((x + y) % 2 === 0 ? a : b);
+        g.fillRect(x * CASILLA, y * CASILLA, CASILLA, CASILLA);
+      }
+    }
+  }
+
   function pintarFondo(g) {
     const ancho = COLUMNAS * CASILLA;
     const alto = FILAS * CASILLA;
-    if (eleccion.cabeza === 'Pikachu') {
-      // Bosque: pasto a cuadros
-      for (let x = 0; x < COLUMNAS; x++) {
-        for (let y = 0; y < FILAS; y++) {
-          g.fillStyle((x + y) % 2 === 0 ? 0x7cc34a : 0x6fb33f);
-          g.fillRect(x * CASILLA, y * CASILLA, CASILLA, CASILLA);
+    switch (mundo().fondo) {
+      case 'bosque':
+        cuadros(g, 0x7cc34a, 0x6fb33f);
+        break;
+      case 'cielo':
+        g.fillStyle(0x5c94fc);
+        g.fillRect(0, 0, ancho, alto);
+        g.fillStyle(0xffffff, 0.85);
+        for (const [nx, ny] of [[60, 50], [250, 110], [130, 250], [320, 320]]) {
+          g.fillRect(nx, ny, 50, 12);
+          g.fillRect(nx + 10, ny - 8, 28, 10);
         }
-      }
-    } else if (eleccion.cabeza === 'Mario') {
-      // Cielo azul con nubes
-      g.fillStyle(0x5c94fc);
-      g.fillRect(0, 0, ancho, alto);
-      g.fillStyle(0xffffff, 0.85);
-      for (const [nx, ny] of [[60, 50], [250, 110], [130, 250], [320, 320]]) {
-        g.fillRect(nx, ny, 50, 12);
-        g.fillRect(nx + 10, ny - 8, 28, 10);
-      }
-    } else {
-      // Arcade: negro con cuadrícula
-      g.fillStyle(0x000000);
-      g.fillRect(0, 0, ancho, alto);
-      g.lineStyle(1, 0x1c2a22);
-      for (let i = 0; i <= COLUMNAS; i++) g.lineBetween(i * CASILLA, 0, i * CASILLA, alto);
-      for (let j = 0; j <= FILAS; j++) g.lineBetween(0, j * CASILLA, ancho, j * CASILLA);
+        break;
+      case 'subterraneo':
+        g.fillStyle(0x10162f);
+        g.fillRect(0, 0, ancho, alto);
+        g.lineStyle(1, 0x22305e);
+        for (let y = 0; y <= FILAS; y++) {
+          g.lineBetween(0, y * CASILLA, ancho, y * CASILLA);
+          for (let x = 0; x <= COLUMNAS; x++) {
+            const corrido = y % 2 === 0 ? 0 : CASILLA / 2;
+            g.lineBetween(x * CASILLA + corrido, y * CASILLA, x * CASILLA + corrido, (y + 1) * CASILLA);
+          }
+        }
+        break;
+      case 'dulce':
+        cuadros(g, 0xffe3ef, 0xffd3e6);
+        break;
+      case 'greenhill':
+        cuadros(g, 0xd28a3a, 0xb5702a);
+        break;
+      default: // arcade
+        g.fillStyle(0x000000);
+        g.fillRect(0, 0, ancho, alto);
+        g.lineStyle(1, 0x1c2a22);
+        for (let i = 0; i <= COLUMNAS; i++) g.lineBetween(i * CASILLA, 0, i * CASILLA, alto);
+        for (let j = 0; j <= FILAS; j++) g.lineBetween(0, j * CASILLA, ancho, j * CASILLA);
     }
+  }
+
+  // Color del pedazo i del cuerpo (arcoíris con la estrella)
+  function colorCuerpo(i, ahora) {
+    if (activo('estrella', ahora)) {
+      return Phaser.Display.Color.HSVToRGB(((ahora / 600) + i * 0.08) % 1, 0.8, 1).color;
+    }
+    const base = Phaser.Display.Color.IntegerToColor(COLORES[eleccion.color]);
+    return i % 2 === 0 ? base.color : base.clone().darken(12).color;
   }
 
   class GameScene extends Phaser.Scene {
@@ -557,67 +857,170 @@
       this.lapiz = this.add.graphics();
       this.hud = this.add.text(6, 4, '', {
         fontFamily: 'Courier New, monospace',
-        fontSize: '15px',
+        fontSize: '14px',
         color: '#ffffff',
         backgroundColor: '#000000aa',
         padding: { x: 4, y: 2 },
       }).setDepth(10);
+      this.cartel = this.add.text(200, 200, '', {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: '#ffd83a',
+        align: 'center',
+        stroke: '#000000',
+        strokeThickness: 6,
+      }).setOrigin(0.5).setDepth(20).setAlpha(0);
       // Serpiente de muestra para el menú
-      serpiente = [{ x: 11, y: 14 }, { x: 10, y: 14 }, { x: 9, y: 14 }, { x: 8, y: 14 }];
+      serpiente = [{ x: 11, y: 14 }, { x: 10, y: 14 }, { x: 9, y: 14 }, { x: 8, y: 14 }, { x: 7, y: 14 }];
       comida = { x: 14, y: 14 };
     }
 
     // update() corre ~60 veces por segundo: es el "game loop"
     update(ahora) {
-      if (modo === 'jugando' && ahora - ultimoPaso >= DIFICULTADES[eleccion.dificultad]) {
+      let espera = DIFICULTADES[eleccion.dificultad] * VELOCIDAD_NIVEL[nivel];
+      if (activo('reloj', ahora)) espera *= 1.8;
+      if (modo === 'jugando' && ahora > esperaHasta && ahora - ultimoPaso >= espera) {
         ultimoPaso = ahora;
         paso(ahora, this);
       }
       this.dibujar(ahora);
     }
 
+    // ---------- Animaciones ----------
+    chispas(casilla, color) {
+      const cx = casilla.x * CASILLA + CASILLA / 2;
+      const cy = casilla.y * CASILLA + CASILLA / 2;
+      for (let i = 0; i < 12; i++) {
+        const angulo = (Math.PI * 2 * i) / 12;
+        const chispa = this.add.rectangle(cx, cy, 4, 4, i % 2 ? color : 0xffffff).setDepth(5);
+        this.tweens.add({
+          targets: chispa,
+          x: cx + Math.cos(angulo) * 26,
+          y: cy + Math.sin(angulo) * 26,
+          alpha: 0,
+          duration: 380,
+          ease: 'Cubic.easeOut',
+          onComplete: () => chispa.destroy(),
+        });
+      }
+    }
+
+    textoFlotante(casilla, texto) {
+      const t = this.add.text(casilla.x * CASILLA + CASILLA / 2, casilla.y * CASILLA, texto, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '15px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 4,
+      }).setOrigin(0.5).setDepth(15);
+      this.tweens.add({
+        targets: t,
+        y: t.y - 30,
+        alpha: 0,
+        duration: 800,
+        ease: 'Sine.easeOut',
+        onComplete: () => t.destroy(),
+      });
+    }
+
+    anunciar(texto) {
+      this.cartel.setText(texto).setAlpha(1).setScale(0.6);
+      this.tweens.killTweensOf(this.cartel);
+      this.tweens.add({ targets: this.cartel, scale: 1, duration: 300, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: this.cartel, alpha: 0, delay: 1300, duration: 400 });
+    }
+
+    explotar() {
+      serpiente.forEach((p, i) => {
+        const pedazo = this.add.rectangle(
+          p.x * CASILLA + CASILLA / 2, p.y * CASILLA + CASILLA / 2,
+          CASILLA - 4, CASILLA - 4, i === 0 ? 0xffffff : colorCuerpo(i, 0),
+        ).setDepth(6);
+        const angulo = Math.random() * Math.PI * 2;
+        const distancia = 40 + Math.random() * 80;
+        this.tweens.add({
+          targets: pedazo,
+          x: pedazo.x + Math.cos(angulo) * distancia,
+          y: pedazo.y + Math.sin(angulo) * distancia,
+          angle: Phaser.Math.Between(-360, 360),
+          alpha: 0,
+          scale: 0.3,
+          duration: 800,
+          ease: 'Cubic.easeOut',
+          onComplete: () => pedazo.destroy(),
+        });
+      });
+    }
+
+    // ---------- Dibujar todo ----------
     dibujar(ahora) {
       const g = this.lapiz;
       g.clear();
       pintarFondo(g);
 
-      const mundo = MUNDOS[eleccion.cabeza];
-      for (const m of muros) pintarDibujo(g, mundo.muro, m.x, m.y);
-      pintarDibujo(g, mundo.comida, comida.x, comida.y);
+      const m = mundo();
+      for (const muro of muros) pintarDibujo(g, m.muro, muro.x, muro.y);
+      pintarDibujo(g, m.comida, comida.x, comida.y);
 
-      // El poder parpadea cuando está por desaparecer
       if (poder && (poder.hasta - ahora > 3000 || Math.floor(ahora / 150) % 2 === 0)) {
         pintarDibujo(g, PODERES[poder.tipo], poder.x, poder.y);
       }
 
-      // Con la estrella, el cuerpo cambia de color como arcoíris
-      const invencible = ahora < invencibleHasta;
-      const colorBase = COLORES[eleccion.color];
-      serpiente.slice(1).forEach((p, i) => {
-        const color = invencible
-          ? Phaser.Display.Color.HSVToRGB(((ahora / 600) + i * 0.08) % 1, 0.8, 1).color
-          : colorBase;
-        g.fillStyle(color);
-        g.fillRect(p.x * CASILLA + 1, p.y * CASILLA + 1, CASILLA - 2, CASILLA - 2);
-      });
+      if (!explotada) this.dibujarSerpiente(g, ahora);
 
-      // La cabeza
+      // HUD: puntos, nivel, récord y poderes activos
+      let texto = `Puntos ${puntos} · Nivel ${nivel + 1} · Récord ${Math.max(record(), puntos)}`;
+      for (const [tipo, hasta] of Object.entries(efectos)) {
+        if (hasta > ahora) texto += `  ${PODERES[tipo].icono} ${Math.ceil((hasta - ahora) / 1000)}s`;
+      }
+      this.hud.setText(texto);
+      this.hud.setVisible(modo !== 'menu');
+    }
+
+    dibujarSerpiente(g, ahora) {
+      // 1. Uniones entre pedazos, para que el cuerpo se vea continuo
+      for (let i = 1; i < serpiente.length; i++) {
+        const a = serpiente[i - 1];
+        const b = serpiente[i];
+        g.fillStyle(colorCuerpo(i, ahora));
+        const x = Math.min(a.x, b.x) * CASILLA + 3;
+        const y = Math.min(a.y, b.y) * CASILLA + 3;
+        const ancho = (Math.abs(a.x - b.x) + 1) * CASILLA - 6;
+        const alto = (Math.abs(a.y - b.y) + 1) * CASILLA - 6;
+        g.fillRect(x, y, ancho, alto);
+      }
+      // 2. Pedazos redondeados con brillo; la cola es más chica
+      for (let i = serpiente.length - 1; i >= 1; i--) {
+        const p = serpiente[i];
+        const esCola = i === serpiente.length - 1;
+        const borde = esCola ? 4 : 1;
+        const color = colorCuerpo(i, ahora);
+        g.fillStyle(color);
+        g.fillRoundedRect(p.x * CASILLA + borde, p.y * CASILLA + borde, CASILLA - borde * 2, CASILLA - borde * 2, 6);
+        g.fillStyle(0xffffff, 0.25);
+        g.fillRoundedRect(p.x * CASILLA + borde + 3, p.y * CASILLA + borde + 3, 6, 4, 2);
+      }
+
+      // 3. La cabeza
       const cabeza = serpiente[0];
-      const diseño = CABEZAS[eleccion.cabeza];
+      const diseño = mundo().cabeza;
+      const invencible = activo('estrella', ahora);
       if (diseño === null) {
         const px = cabeza.x * CASILLA;
         const py = cabeza.y * CASILLA;
-        g.fillStyle(invencible ? 0xffd700 : colorBase);
-        g.fillRect(px, py, CASILLA, CASILLA);
-        g.fillStyle(0x111111);
-        if (direccion.x !== 0) {
-          const ox = px + 8 + direccion.x * 4;
-          g.fillRect(ox, py + 4, 4, 4);
-          g.fillRect(ox, py + 12, 4, 4);
-        } else {
-          const oy = py + 8 + direccion.y * 4;
-          g.fillRect(px + 4, oy, 4, 4);
-          g.fillRect(px + 12, oy, 4, 4);
+        g.fillStyle(invencible ? 0xffd700 : COLORES[eleccion.color]);
+        g.fillRoundedRect(px, py, CASILLA, CASILLA, 7);
+        g.fillStyle(0xffffff);
+        const ojos = direccion.x !== 0
+          ? [[px + 8 + direccion.x * 3, py + 3], [px + 8 + direccion.x * 3, py + 11]]
+          : [[px + 3, py + 8 + direccion.y * 3], [px + 11, py + 8 + direccion.y * 3]];
+        for (const [ox, oy] of ojos) {
+          g.fillStyle(0xffffff);
+          g.fillRect(ox, oy, 6, 6);
+          g.fillStyle(0x111111);
+          g.fillRect(ox + 1 + direccion.x * 2 + 1, oy + 1 + direccion.y * 2 + 1, 3, 3);
         }
       } else {
         if (invencible) {
@@ -626,12 +1029,6 @@
         }
         pintarDibujo(g, diseño, cabeza.x, cabeza.y);
       }
-
-      // Puntaje, récord y tiempo de estrella
-      let texto = `Puntos: ${puntos}   Récord: ${Math.max(record(), puntos)}`;
-      if (invencible) texto += `   ⭐ ${Math.ceil((invencibleHasta - ahora) / 1000)}`;
-      this.hud.setText(texto);
-      this.hud.setVisible(modo !== 'menu');
     }
   }
 
@@ -660,7 +1057,6 @@
       } catch (e) { ctx = null; }
     }
 
-    // Un "beep": frecuencia (Hz), duración (s), forma de onda, volumen
     function tono(freq, dur, tipo = 'square', vol = 0.12, retraso = 0, freqFinal = null) {
       if (silencio || !ctx) return;
       const t = ctx.currentTime + retraso;
@@ -676,7 +1072,6 @@
       osc.stop(t + dur + 0.02);
     }
 
-    // Melodía de 8 bits que se repite (notas en Hz; 0 = silencio)
     const MELODIA = [523, 0, 659, 0, 784, 659, 523, 0, 587, 0, 698, 0, 880, 698, 587, 0,
                      523, 0, 659, 0, 784, 880, 988, 0, 1047, 0, 784, 0, 523, 0, 0, 0];
     let nota = 0;
@@ -686,6 +1081,7 @@
       comer: () => { tono(660, 0.07); tono(990, 0.09, 'square', 0.12, 0.07); },
       perder: () => { tono(440, 0.6, 'sawtooth', 0.15, 0, 60); },
       poder: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tono(f, 0.1, 'square', 0.1, i * 0.07)),
+      nivel: () => [392, 523, 659, 784, 659, 784, 1047].forEach((f, i) => tono(f, 0.14, 'square', 0.1, i * 0.1)),
       romper: () => tono(180, 0.12, 'square', 0.12, 0, 60),
       musica(encender) {
         clearInterval(musicaTimer);
@@ -705,7 +1101,7 @@
   })();
 
   // =====================================================================
-  // 6. RÉCORDS: guardados en este iPad (localStorage)
+  // 6. RÉCORDS: guardados en este aparato (localStorage)
   // =====================================================================
   function leerTop() {
     try {
@@ -752,22 +1148,34 @@
     $('pausado').hidden = modo !== 'pausa';
     $('fin').hidden = modo !== 'fin';
     $('pausa').disabled = modo !== 'jugando';
-    if (modo === 'menu') pintarTabla('tabla-menu');
+    if (modo === 'menu') {
+      pintarTabla('tabla-menu');
+      explotada = false;
+    }
   }
 
   function mostrarFin() {
     const esRecord = puntos > 0 && puntos > record();
-    $('resumen').textContent = esRecord ? `¡NUEVO RÉCORD! ${puntos} puntos` : `Hiciste ${puntos} puntos`;
+    $('resumen').textContent = (esRecord ? `¡NUEVO RÉCORD! ${puntos} puntos` : `Hiciste ${puntos} puntos`) +
+      ` · llegaste al nivel ${nivel + 1}`;
     $('form-record').hidden = !entraAlTop(puntos);
     $('iniciales').value = '';
     pintarTabla('tabla-fin');
+  }
+
+  let avisoTimer = null;
+  function avisar(texto) {
+    $('aviso').textContent = texto;
+    $('aviso').hidden = false;
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(() => { $('aviso').hidden = true; }, 4500);
   }
 
   $('form-record').addEventListener('submit', (e) => {
     e.preventDefault();
     const iniciales = ($('iniciales').value.trim().toUpperCase() || '???').slice(0, 3);
     const lista = leerTop();
-    lista.push({ iniciales, puntos, cabeza: eleccion.cabeza });
+    lista.push({ iniciales, puntos, cabeza: eleccion.personaje });
     lista.sort((a, b) => b.puntos - a.puntos);
     guardarTop(lista.slice(0, 5));
     $('form-record').hidden = true;
@@ -802,7 +1210,24 @@
     $('sonido').setAttribute('aria-pressed', String(callado));
   });
 
-  // Botones de opción (cabeza, color, dificultad)
+  // Pantalla completa (si el navegador lo permite)
+  $('completa').addEventListener('click', async () => {
+    const el = document.documentElement;
+    const pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else if (pedir) {
+        await pedir.call(el);
+      } else {
+        throw new Error('sin soporte');
+      }
+    } catch (e) {
+      avisar('En iPad: toca Compartir y luego "Agregar a pantalla de inicio" para jugar en pantalla completa.');
+    }
+  });
+
+  // Botones de opción (personaje, color, dificultad)
   function crearOpciones(contenedorId, opciones, clave, alCrear) {
     const contenedor = $(contenedorId);
     for (const nombre of Object.keys(opciones)) {
@@ -814,11 +1239,16 @@
       boton.addEventListener('click', () => {
         eleccion[clave] = nombre;
         contenedor.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === boton)));
+        if (clave === 'personaje') mostrarInfoPersonaje();
       });
       contenedor.appendChild(boton);
     }
   }
-  crearOpciones('cabezas', CABEZAS, 'cabeza', (b, n) => { b.textContent = n; });
+  function mostrarInfoPersonaje() {
+    const iconos = mundo().poderes.map((p) => `${PODERES[p].icono} ${PODERES[p].nombre}`).join(' · ');
+    $('info-personaje').textContent = `Poderes: ${iconos}`;
+  }
+  crearOpciones('cabezas', PERSONAJES, 'personaje', (b, n) => { b.textContent = n; });
   crearOpciones('colores', COLORES, 'color', (b, n) => {
     b.className = 'color';
     b.style.background = '#' + COLORES[n].toString(16).padStart(6, '0');
@@ -826,14 +1256,36 @@
     b.title = n;
   });
   crearOpciones('dificultades', DIFICULTADES, 'dificultad', (b, n) => { b.textContent = n; });
+  mostrarInfoPersonaje();
 
-  // Flechas en pantalla y teclado
+  // Flechas en pantalla
   for (const nombre of Object.keys(DIRECCIONES)) {
     $(nombre).addEventListener('pointerdown', (e) => {
       e.preventDefault();
       girar(nombre);
     });
   }
+
+  // Deslizar el dedo sobre el tablero
+  let inicioToque = null;
+  const pantalla = document.querySelector('.pantalla');
+  pantalla.addEventListener('pointerdown', (e) => {
+    if (modo === 'jugando') inicioToque = { x: e.clientX, y: e.clientY };
+  });
+  pantalla.addEventListener('pointermove', (e) => {
+    if (!inicioToque) return;
+    const dx = e.clientX - inicioToque.x;
+    const dy = e.clientY - inicioToque.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return; // muy corto todavía
+    if (Math.abs(dx) > Math.abs(dy)) girar(dx > 0 ? 'derecha' : 'izquierda');
+    else girar(dy > 0 ? 'abajo' : 'arriba');
+    inicioToque = { x: e.clientX, y: e.clientY }; // permite encadenar giros sin levantar el dedo
+  });
+  const soltar = () => { inicioToque = null; };
+  pantalla.addEventListener('pointerup', soltar);
+  pantalla.addEventListener('pointercancel', soltar);
+
+  // Teclado
   const TECLAS = { ArrowUp: 'arriba', ArrowDown: 'abajo', ArrowLeft: 'izquierda', ArrowRight: 'derecha' };
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
@@ -849,7 +1301,6 @@
     }
   });
 
-  // Si cambias de app en el iPad, el juego se pausa solo
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && modo === 'jugando') pausar();
   });

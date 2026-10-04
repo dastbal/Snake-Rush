@@ -1,0 +1,14 @@
+{
+  "name": "Snake Rush",
+  "short_name": "Snake Rush",
+  "description": "Snake retro de arcade con personajes, niveles y poderes.",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0d1210",
+  "theme_color": "#0d1210",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
