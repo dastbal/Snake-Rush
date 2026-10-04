@@ -4,16 +4,14 @@
  * 1 jugador:  cruceta a la izquierda · A y B a la derecha
  * 2 jugadores: cada uno tiene su mando completo, uno en cada lado del iPad
  *
- * La cruceta es una almohadilla: se puede deslizar el dedo y hacer diagonales
- * (por ejemplo, correr y saltar a la vez). ▲ = saltar · ▼ = bajar de plataformas.
+ * Las flechas son 4 botones de arcade separados: se tocan y se mantienen
+ * (con dos dedos se puede correr y saltar a la vez). ▲ = saltar · ▼ = bajar de plataformas.
  *
  * Teclado:
  *  1 jugador:  flechas o WASD · A = Z, J o F · B = X, K o G
  *  2 jugadores: J1 = WASD + F (A) + G (B) · J2 = flechas + K (A) + L (B)
  *  Pausa: Escape, Enter o P
  */
-const ZONA_MUERTA = 0.28;
-
 /** Captura el dedo en el botón (si el navegador no puede, se sigue igual). */
 function capturar(el, e) {
   try {
@@ -31,41 +29,53 @@ export function crearMandos({ izquierda, derecha, alPausar }) {
   let humanos = 1;
 
   // ---------- Piezas en pantalla ----------
+  /**
+   * Un botón que se mantiene apretado mientras el dedo siga encima.
+   * El dedo queda "pegado" al botón que tocó: arrastrarlo no cambia de botón.
+   * Un toque muy rápido dura al menos 60 ms para que el juego alcance a verlo.
+   */
+  function botonSostenido(b, entrada, campo) {
+    let desde = 0;
+    let dedo = null;
+    const soltar = (e) => {
+      if (e.pointerId !== dedo) return;
+      dedo = null;
+      const espera = Math.max(0, 60 - (performance.now() - desde));
+      setTimeout(() => {
+        if (dedo !== null) return; // lo volvieron a tocar
+        entrada[campo] = false;
+        b.classList.remove('pulsado');
+      }, espera);
+    };
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      capturar(b, e);
+      dedo = e.pointerId;
+      desde = performance.now();
+      entrada[campo] = true;
+      b.classList.add('pulsado');
+    });
+    b.addEventListener('pointerup', soltar);
+    b.addEventListener('pointercancel', soltar);
+    b.addEventListener('lostpointercapture', soltar);
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  /** Cruceta de 4 botones de arcade: hay que tocarlos y mantenerlos (no se arrastra). */
   function cruceta(entrada, chica = false) {
     const pad = document.createElement('div');
     pad.className = `pad${chica ? ' chica' : ''}`;
     pad.setAttribute('role', 'group');
-    pad.setAttribute('aria-label', 'Cruceta');
-    pad.innerHTML = '<span class="flecha f-arriba">▲</span><span class="flecha f-izq">◀</span><span class="flecha f-der">▶</span><span class="flecha f-abajo">▼</span><span class="perilla"></span>';
-    const perilla = pad.querySelector('.perilla');
-
-    const leer = (e) => {
-      const r = pad.getBoundingClientRect();
-      const dx = ((e.clientX - r.left) / r.width) * 2 - 1;
-      const dy = ((e.clientY - r.top) / r.height) * 2 - 1;
-      entrada.izq = dx < -ZONA_MUERTA;
-      entrada.der = dx > ZONA_MUERTA;
-      entrada.arriba = dy < -0.45;
-      entrada.abajo = dy > 0.45;
-      const lim = (v) => Math.max(-1, Math.min(1, v));
-      perilla.style.transform = `translate(${lim(dx) * 30}%, ${lim(dy) * 30}%)`;
-    };
-    const soltar = () => {
-      delete pad.dataset.activo;
-      Object.assign(entrada, { izq: false, der: false, arriba: false, abajo: false });
-      perilla.style.transform = '';
-    };
-    pad.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      capturar(pad, e);
-      pad.dataset.activo = '1';
-      leer(e);
-    });
-    pad.addEventListener('pointermove', (e) => {
-      if (pad.dataset.activo) leer(e);
-    });
-    pad.addEventListener('pointerup', soltar);
-    pad.addEventListener('pointercancel', soltar);
+    pad.setAttribute('aria-label', 'Flechas');
+    for (const [campo, texto, nombre] of [['arriba', '▲', 'Saltar'], ['izq', '◀', 'Izquierda'], ['der', '▶', 'Derecha'], ['abajo', '▼', 'Abajo']]) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = `flecha f-${campo}`;
+      b.textContent = texto;
+      b.setAttribute('aria-label', nombre);
+      botonSostenido(b, entrada, campo);
+      pad.appendChild(b);
+    }
     return pad;
   }
 
@@ -78,16 +88,7 @@ export function crearMandos({ izquierda, derecha, alPausar }) {
       b.className = `boton-${boton.toLowerCase()}`;
       b.textContent = texto;
       b.setAttribute('aria-label', boton === 'A' ? 'A: golpe' : 'B: especial');
-      const soltar = () => { entrada[boton] = false; b.classList.remove('pulsado'); };
-      b.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        capturar(b, e);
-        entrada[boton] = true;
-        b.classList.add('pulsado');
-      });
-      b.addEventListener('pointerup', soltar);
-      b.addEventListener('pointercancel', soltar);
-      b.addEventListener('contextmenu', (e) => e.preventDefault());
+      botonSostenido(b, entrada, boton);
       caja.appendChild(b);
     }
     return caja;

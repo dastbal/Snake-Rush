@@ -103,6 +103,7 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 - **Súper:** **▼ ▶ B** hace la versión SÚPER del especial (¡KAMEHAMEHA SÚPER!), el doble de fuerte
 - Más daño (%) = sales volando más lejos. Reglas por **vidas** o por **tiempo**
 - Objetos: onigiri (cura), bomba y esfera de poder (especial más fuerte)
+- Flechas y A/B son **botones de arcade**: se tocan y se mantienen (arrastrar el dedo no cambia de botón)
 - 1 jugador contra 1 a 3 rivales de la compu (3 dificultades) o **2 jugadores** en el mismo iPad
 
 **Cómo está hecho:** `nucleo/pelea.js` es un motor propio y puro ([ADR 0010](docs/adr/0010-motor-de-pelea-propio.md)); la IA aprieta los mismos botones que un jugador.
