@@ -80,7 +80,7 @@ export class EscenaMundo extends Phaser.Scene {
       });
       return;
     }
-    const camino = buscarCamino(m, partida.x, partida.y, x, y);
+    const camino = buscarCamino(m, partida.x, partida.y, x, y, partida.dir);
     if (camino) this.seguir(camino, null);
   }
 

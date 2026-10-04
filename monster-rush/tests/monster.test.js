@@ -57,6 +57,17 @@ test('se puede caminar del inicio del pueblo a cada puerta y a la ruta', () => {
   assert.ok(buscarCamino(MAPAS.ruta1, 9, 28, 9, 2), 'cruzar la ruta hasta la líder');
 });
 
+test('el camino automático es corto y no hace zigzag', () => {
+  const camino = buscarCamino(MAPAS.pueblo, 4, 5, 8, 8);
+  assert.equal(camino.length, 7); // 4 a la derecha + 3 abajo: lo más corto posible
+  const giros = camino.slice(1).filter((p, i) => {
+    const a = i === 0 ? { x: 4, y: 5 } : camino[i - 1];
+    const b = camino[i];
+    return (b.x - a.x) !== (p.x - b.x) || (b.y - a.y) !== (p.y - b.y);
+  }).length;
+  assert.equal(giros, 1, 'un solo giro, en forma de L');
+});
+
 // ---------- Tipos ----------
 test('tabla de tipos', () => {
   assert.equal(efectividad('fuego', ['planta']), 2);

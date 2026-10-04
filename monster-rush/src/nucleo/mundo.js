@@ -36,33 +36,49 @@ export function caminable(m, x, y) {
 /** ¿Hay algo con qué hablar en esa casilla? */
 export const interactuable = (m, x, y) => Boolean(personaEn(m, x, y) || letreroEn(m, x, y));
 
+/** Cada giro "cuesta" un poco, para preferir caminos rectos entre los más cortos. */
+const COSTO_PASO = 10;
+const COSTO_GIRO = 1;
+
 /**
- * Camino más corto (búsqueda en anchura) de (x0,y0) a (x1,y1).
+ * Camino más corto de (x0,y0) a (x1,y1) que, entre los igual de cortos,
+ * gira lo menos posible (se ve natural, sin zigzag).
+ * Es Dijkstra sobre (casilla, dirección): como un GPS que prefiere ir derecho.
  * Devuelve la lista de casillas sin incluir el inicio, o null si no hay camino.
  */
-export function buscarCamino(m, x0, y0, x1, y1) {
+export function buscarCamino(m, x0, y0, x1, y1, dirInicial = null) {
   if (!caminable(m, x1, y1)) return null;
-  const clave = (x, y) => `${x},${y}`;
-  const vino = new Map([[clave(x0, y0), null]]);
-  const cola = [[x0, y0]];
-  while (cola.length) {
-    const [x, y] = cola.shift();
-    if (x === x1 && y === y1) {
+  const nombres = Object.keys(DIRS);
+  const clave = (x, y, d) => `${x},${y},${d}`;
+  const inicio = clave(x0, y0, dirInicial);
+  const costo = new Map([[inicio, 0]]);
+  const vino = new Map([[inicio, null]]);
+  const abiertos = [{ x: x0, y: y0, d: dirInicial, c: 0 }];
+
+  while (abiertos.length) {
+    // Sacar el más barato (el mapa es chico: ordenar alcanza)
+    abiertos.sort((a, b) => a.c - b.c);
+    const actual = abiertos.shift();
+    const k = clave(actual.x, actual.y, actual.d);
+    if (actual.c > costo.get(k)) continue;
+    if (actual.x === x1 && actual.y === y1) {
       const camino = [];
-      let actual = clave(x, y);
-      while (actual !== clave(x0, y0)) {
-        const [cx, cy] = actual.split(',').map(Number);
-        camino.unshift({ x: cx, y: cy });
-        actual = vino.get(actual);
+      for (let p = k; vino.get(p) !== null; p = vino.get(p)) {
+        const [cx, cy] = p.split(',');
+        camino.unshift({ x: Number(cx), y: Number(cy) });
       }
       return camino;
     }
-    for (const d of Object.values(DIRS)) {
-      const nx = x + d.x;
-      const ny = y + d.y;
-      if (vino.has(clave(nx, ny)) || !caminable(m, nx, ny)) continue;
-      vino.set(clave(nx, ny), clave(x, y));
-      cola.push([nx, ny]);
+    for (const n of nombres) {
+      const nx = actual.x + DIRS[n].x;
+      const ny = actual.y + DIRS[n].y;
+      if (!caminable(m, nx, ny)) continue;
+      const c = actual.c + COSTO_PASO + (actual.d && actual.d !== n ? COSTO_GIRO : 0);
+      const kn = clave(nx, ny, n);
+      if (costo.has(kn) && costo.get(kn) <= c) continue;
+      costo.set(kn, c);
+      vino.set(kn, k);
+      abiertos.push({ x: nx, y: ny, d: n, c });
     }
   }
   return null;
