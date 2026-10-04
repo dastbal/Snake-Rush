@@ -18,15 +18,19 @@ function crearInfo(capa, lado) {
   capa.appendChild(div);
   return {
     div,
-    mostrar(c, animar = false) {
-      const s = stats(c);
+    /** Nombre, nivel y vida actual de la criatura. */
+    mostrar(c) {
       div.querySelector('.info-nombre').textContent = `${nombre(c)}  Nv${c.nivel}`;
-      const pct = Math.max(0, (c.ps / s.psMax) * 100);
+      this.vida(c.ps, stats(c).psMax, false);
+    },
+    /** Solo la barra de vida, con los valores que trae un paso del combate (ADR 0007). */
+    vida(ps, psMax, animar = true) {
+      const pct = Math.max(0, (ps / psMax) * 100);
       const barra = div.querySelector('.vida i');
       barra.style.transition = animar ? 'width 450ms linear' : 'none';
       barra.style.width = `${pct}%`;
       barra.dataset.nivel = pct > 50 ? 'alto' : pct > 20 ? 'medio' : 'bajo';
-      div.querySelector('.info-ps').textContent = lado === 'jugador' ? `${c.ps}/${s.psMax}` : '';
+      div.querySelector('.info-ps').textContent = lado === 'jugador' ? `${ps}/${psMax}` : '';
     },
   };
 }
@@ -37,7 +41,7 @@ function crearInfo(capa, lado) {
  */
 export async function jugarCombate({ combate, escena, ui, capa, equipo, mochila, sonido }) {
   const info = { rival: crearInfo(capa, 'rival'), jugador: crearInfo(capa, 'jugador') };
-  const refrescar = (lado, animar) => info[lado].mostrar(combate.activa(lado), animar);
+  const refrescar = (lado) => info[lado].mostrar(combate.activa(lado));
 
   sonido.musica('combate');
   info.jugador.div.hidden = true;
@@ -60,7 +64,7 @@ export async function jugarCombate({ combate, escena, ui, capa, equipo, mochila,
       case 'ps':
         sonido.golpe();
         await escena.golpe(paso.lado);
-        refrescar(paso.lado, true);
+        info[paso.lado].vida(paso.ps, paso.psMax);
         await espera(480);
         break;
       case 'entra':
