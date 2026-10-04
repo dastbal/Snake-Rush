@@ -28,16 +28,35 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ---------- La consola ---------- */
+/* ---------- La consola ----------
+   Vertical: pantalla arriba, cruceta y A/B abajo (como un Game Boy).
+   Horizontal: cruceta a la izquierda y A/B a la derecha (como un GBA). */
 .consola {
   background: linear-gradient(160deg, var(--carcasa), var(--carcasa-oscura));
   border-radius: 18px 18px 48px 18px;
-  padding: 18px 18px 14px;
+  padding: 16px 18px 18px;
   box-shadow: inset 0 2px 0 #8a70d8, 0 10px 0 #2c1f5c;
-  width: min(100%, 680px, calc((100dvh - 140px) * 160 / 144 + 36px));
-  display: flex; flex-direction: column; gap: 10px;
+  --ancho-pantalla: min(100vw - 68px, 640px, (100dvh - 330px) * 160 / 144);
+  display: grid; gap: 12px 18px; align-items: center; justify-items: center;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "marco marco"
+    "marca marca"
+    "cruceta ab"
+    "centrales centrales";
 }
-.marco { background: var(--marco); border-radius: 10px 10px 30px 10px; padding: 14px; }
+.marco { grid-area: marco; width: calc(var(--ancho-pantalla) + 28px); background: var(--marco); border-radius: 10px 10px 30px 10px; padding: 14px; }
+@media (orientation: landscape) and (min-width: 700px) {
+  .consola {
+    --ancho-pantalla: min(100vw - 420px, 640px, (100dvh - 120px) * 160 / 144);
+    grid-template-columns: auto auto auto;
+    grid-template-areas:
+      "cruceta marco ab"
+      ". marca ."
+      ". centrales .";
+    border-radius: 28px;
+  }
+}
 .pantalla {
   position: relative; width: 100%; aspect-ratio: 160 / 144;
   background: var(--papel); overflow: hidden; touch-action: none;
@@ -45,20 +64,45 @@ body {
   font-size: 3.4cqw; line-height: 1.6;
 }
 #juego, #capa { position: absolute; inset: 0; }
-#juego canvas { display: block; width: 100% !important; height: 100% !important; image-rendering: pixelated; }
+#juego canvas { display: block; image-rendering: pixelated; }
 #capa { pointer-events: none; }
 #capa > * { pointer-events: auto; }
-.marca { margin: 0; text-align: center; font-size: 12px; letter-spacing: 0.15em; color: #e8e0ff; }
+.marca { grid-area: marca; margin: 0; text-align: center; font-size: 12px; letter-spacing: 0.15em; color: #e8e0ff; }
 .marca span { color: #ffd84d; }
-.botones { display: flex; justify-content: space-between; gap: 8px; }
-.boton {
-  font: inherit; font-size: 11px; color: var(--papel); text-decoration: none;
-  background: var(--marco); border: 0; border-radius: 999px; padding: 10px 14px; min-height: 40px;
-  display: inline-flex; align-items: center; cursor: pointer; box-shadow: 0 3px 0 #15121f;
+
+/* ---------- Mando ---------- */
+.cruceta, .ab, .centrales { touch-action: none; -webkit-touch-callout: none; }
+.cruceta {
+  grid-area: cruceta; display: grid; grid-template: repeat(3, 52px) / repeat(3, 52px);
+  filter: drop-shadow(0 4px 0 #15121f);
 }
-.boton:active { transform: translateY(2px); box-shadow: 0 1px 0 #15121f; }
-.boton-menu { background: #c83a6a; box-shadow: 0 3px 0 #7a1f3f; }
-.boton:focus-visible, .pantalla button:focus-visible { outline: 3px solid #ffd84d; outline-offset: 2px; }
+.dir, .d-centro { background: var(--marco); border: 0; color: #8a84a0; font-size: 16px; }
+.dir { cursor: pointer; padding: 0; }
+.d-arriba { grid-area: 1 / 2; border-radius: 8px 8px 0 0; }
+.d-izquierda { grid-area: 2 / 1; border-radius: 8px 0 0 8px; }
+.d-centro { grid-area: 2 / 2; }
+.d-derecha { grid-area: 2 / 3; border-radius: 0 8px 8px 0; }
+.d-abajo { grid-area: 3 / 2; border-radius: 0 0 8px 8px; }
+.dir.pulsado { background: #15121f; color: var(--papel); }
+.ab { grid-area: ab; display: flex; gap: 16px; transform: rotate(-22deg); }
+.redondo {
+  width: 70px; height: 70px; border-radius: 50%; border: 0; cursor: pointer;
+  font: inherit; font-size: 18px; color: #ffe0ec;
+  background: radial-gradient(circle at 35% 30%, #f06a9a, #c83a6a 60%, #8a1f45);
+  box-shadow: 0 5px 0 #6a1535;
+}
+.boton-b { margin-top: 30px; }
+.redondo.pulsado { transform: translateY(4px); box-shadow: 0 1px 0 #6a1535; }
+.centrales { grid-area: centrales; display: flex; gap: 14px; }
+.pastilla {
+  font: inherit; font-size: 10px; color: #e8e0ff; text-decoration: none; letter-spacing: 0.1em;
+  background: var(--marco); border: 0; border-radius: 999px; padding: 10px 16px; min-height: 40px;
+  display: inline-flex; align-items: center; cursor: pointer; box-shadow: 0 3px 0 #15121f;
+  transform: rotate(-22deg) scale(0.92);
+}
+.pastilla.pulsado, .pastilla:active { box-shadow: 0 1px 0 #15121f; translate: 0 2px; }
+.dir:focus-visible, .redondo:focus-visible, .pastilla:focus-visible, .pantalla button:focus-visible { outline: 3px solid #ffd84d; outline-offset: 2px; }
+.menu button:focus { outline: 0.6cqw solid #c83a6a; outline-offset: 0.3cqw; }
 
 /* ---------- Caja de texto ---------- */
 .caja-texto {

@@ -8,6 +8,8 @@ import { mapa, ancho, alto, caminable, buscarCamino, vecinaParaHablar, interactu
 import { crearTexturas, LOSETA } from './texturas.js';
 
 const MS_PASO = 160;
+/** Si el dedo se mueve más que esto (en píxeles del juego), no cuenta como toque. */
+const TOQUE_MAXIMO = 6;
 
 export class EscenaMundo extends Phaser.Scene {
   constructor() {
@@ -24,16 +26,37 @@ export class EscenaMundo extends Phaser.Scene {
     this.capa = this.add.container(0, 0);
     this.jugador = this.add.image(0, 0, 'p-jugador-frente').setOrigin(0).setDepth(10);
     this.cameras.main.setRoundPixels(true);
-    this.teclas = this.input.keyboard.createCursorKeys();
+    /** Dirección que mantiene apretada la cruceta en pantalla (o null). */
+    this.direccionMando = null;
 
-    // Tocar el mapa: caminar hasta ahí (o ir a hablar con alguien)
-    this.input.on('pointerdown', (puntero) => {
+    // Marcador que muestra a dónde vas al tocar el mapa
+    this.marcador = this.add.rectangle(0, 0, LOSETA - 2, LOSETA - 2)
+      .setStrokeStyle(2, 0xffffff).setOrigin(0).setDepth(9).setVisible(false);
+
+    // Tocar el mapa: caminar hasta ahí (o ir a hablar con alguien).
+    // Se decide al LEVANTAR el dedo, y solo si no lo deslizaste: así un
+    // deslizamiento o un toque doble del navegador no manda a otro lado.
+    this.input.on('pointerup', (puntero) => {
       if (!this.director || this.director.ocupado()) return;
+      if (puntero.getDistance() > TOQUE_MAXIMO || puntero.getDuration() > 600) return;
       const x = Math.floor(puntero.worldX / LOSETA);
       const y = Math.floor(puntero.worldY / LOSETA);
       this.irA(x, y);
     });
     this.events.emit('lista');
+  }
+
+  /** Muestra el marcador en (x, y) un momento. */
+  marcar(x, y) {
+    this.marcador.setPosition(x * LOSETA + 1, y * LOSETA + 1).setVisible(true).setAlpha(1);
+    this.tweens.killTweensOf(this.marcador);
+    this.tweens.add({ targets: this.marcador, alpha: 0, delay: 250, duration: 350, onComplete: () => this.marcador.setVisible(false) });
+  }
+
+  /** Detiene el camino automático (por ejemplo, al usar la cruceta). */
+  detener() {
+    this.camino = [];
+    this.alTerminarCamino = null;
   }
 
   /** Dibuja el mapa actual completo. */
@@ -74,6 +97,7 @@ export class EscenaMundo extends Phaser.Scene {
     if (interactuable(m, x, y)) {
       const plan = vecinaParaHablar(m, partida.x, partida.y, x, y);
       if (!plan) return;
+      this.marcar(x, y);
       this.seguir(plan.camino, () => {
         this.mirar(plan.mirar);
         this.director.alHablar(x, y);
@@ -81,7 +105,9 @@ export class EscenaMundo extends Phaser.Scene {
       return;
     }
     const camino = buscarCamino(m, partida.x, partida.y, x, y, partida.dir);
-    if (camino) this.seguir(camino, null);
+    if (!camino) return;
+    this.marcar(x, y);
+    this.seguir(camino, null);
   }
 
   seguir(camino, alTerminar) {
@@ -131,12 +157,21 @@ export class EscenaMundo extends Phaser.Scene {
     });
   }
 
-  /** Con teclado: un paso por tecla (se puede mantener apretada). */
+  /**
+   * Cruceta (en pantalla o flechas del teclado, ver interfaz/mando.js):
+   * mientras está apretada, camina una casilla tras otra.
+   */
   update() {
+    if (this.direccionMando) this.pasoMando(this.direccionMando);
+  }
+
+  /**
+   * Un paso con la cruceta: avanza si se puede; si hay algo enfrente, solo gira.
+   * Se llama al apretar (para que un toque rápido también cuente) y en cada
+   * cuadro mientras se mantiene apretado.
+   */
+  pasoMando(dir) {
     if (!this.director || this.director.ocupado() || this.caminando) return;
-    const t = this.teclas;
-    const dir = t.up.isDown ? 'arriba' : t.down.isDown ? 'abajo' : t.left.isDown ? 'izquierda' : t.right.isDown ? 'derecha' : null;
-    if (!dir) return;
     const d = DIRS[dir];
     const nx = partida.x + d.x;
     const ny = partida.y + d.y;
@@ -145,7 +180,7 @@ export class EscenaMundo extends Phaser.Scene {
     else this.mirar(dir);
   }
 
-  /** Habla con lo que tiene enfrente (tecla Enter/Espacio). */
+  /** Habla con lo que tiene enfrente (botón A). */
   hablarEnfrente() {
     if (this.caminando) return;
     const d = DIRS[partida.dir];

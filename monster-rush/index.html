@@ -25,10 +25,23 @@
       </div>
     </div>
     <p class="marca">MONSTER RUSH <span>COLOR</span></p>
-    <div class="botones">
-      <a class="boton" href="../">← ARCADE</a>
-      <button type="button" class="boton" id="boton-sonido" aria-label="Sonido" aria-pressed="false">🔊</button>
-      <button type="button" class="boton boton-menu" id="boton-menu">MENÚ</button>
+
+    <!-- Mando: ver src/interfaz/mando.js -->
+    <div class="cruceta" role="group" aria-label="Cruceta">
+      <button type="button" class="dir d-arriba" data-boton="arriba" aria-label="Arriba">▲</button>
+      <button type="button" class="dir d-izquierda" data-boton="izquierda" aria-label="Izquierda">◀</button>
+      <span class="d-centro" aria-hidden="true"></span>
+      <button type="button" class="dir d-derecha" data-boton="derecha" aria-label="Derecha">▶</button>
+      <button type="button" class="dir d-abajo" data-boton="abajo" aria-label="Abajo">▼</button>
+    </div>
+    <div class="ab" role="group" aria-label="Botones A y B">
+      <button type="button" class="redondo boton-b" data-boton="B" aria-label="B: volver">B</button>
+      <button type="button" class="redondo boton-a" data-boton="A" aria-label="A: hablar o elegir">A</button>
+    </div>
+    <div class="centrales">
+      <a class="pastilla" href="../">ARCADE</a>
+      <button type="button" class="pastilla" id="boton-sonido" aria-label="Sonido" aria-pressed="false">🔊</button>
+      <button type="button" class="pastilla" data-boton="START" aria-label="Start: menú">START</button>
     </div>
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>

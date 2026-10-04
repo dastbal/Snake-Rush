@@ -13,6 +13,7 @@ import { crearSonido } from './audio/sonido.js';
 import { crearUI } from './interfaz/ui.js';
 import { crearTitulo } from './interfaz/titulo.js';
 import { crearDirector } from './interfaz/director.js';
+import { crearMando } from './interfaz/mando.js';
 
 const capa = document.getElementById('capa');
 const sonido = crearSonido();
@@ -50,26 +51,28 @@ juego.events.once('ready', () => {
   else mundo.events.once('lista', conectar);
 });
 
-// Botones de la consola
-document.getElementById('boton-menu').addEventListener('click', () => director?.abrirMenu());
+// El mando: cruceta, A, B y START (en pantalla y teclado)
+crearMando({
+  capa,
+  ui,
+  sonido,
+  mundo: () => juego.scene.getScene('mundo'),
+  abrirMenu: () => director?.abrirMenu(),
+});
+
 document.getElementById('boton-sonido').addEventListener('click', (e) => {
   sonido.iniciar();
   const callado = sonido.alternar();
   e.currentTarget.textContent = callado ? '🔇' : '🔊';
   e.currentTarget.setAttribute('aria-pressed', String(callado));
 });
-document.addEventListener('keydown', (e) => {
-  if (!director || director.ocupado()) return;
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    juego.scene.getScene('mundo').hablarEnfrente();
-  } else if (e.key === 'Escape' || e.key === 'm') {
-    director.abrirMenu();
-  }
-});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) sonido.musica(null);
 });
+
+// Si la pantalla cambia de tamaño (girar el iPad, aparece la barra de Safari),
+// Phaser recalcula su tamaño para que cada toque caiga en la casilla correcta.
+new ResizeObserver(() => juego.scale.refresh()).observe(document.querySelector('.pantalla'));
 
 // Para depurar desde la consola del navegador
 window.monsterRush = { juego, ui };

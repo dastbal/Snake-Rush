@@ -23,14 +23,8 @@ export function crearUI({ capa, sonido }) {
   const tocar = () => {
     if (avanzar && performance.now() - inicioLinea > 150) avanzar();
   };
-  // Tocar en cualquier parte de la pantalla avanza el texto
+  // Tocar en cualquier parte de la pantalla avanza el texto (los botones A y B, en mando.js)
   capa.parentElement.addEventListener('pointerdown', tocar);
-  document.addEventListener('keydown', (e) => {
-    if ((e.key === 'Enter' || e.key === ' ') && avanzar) {
-      e.preventDefault();
-      tocar();
-    }
-  });
 
   /** Escribe el texto letra por letra; un toque lo completa y otro avanza. */
   function unaLinea(linea, { esperar = true } = {}) {
@@ -149,5 +143,14 @@ export function crearUI({ capa, sonido }) {
     setTimeout(() => a.remove(), 1800);
   }
 
-  return { decir, elegir, aviso, ocupado: () => ocupados > 0, ocultarTexto: () => { caja.hidden = true; } };
+  return {
+    decir,
+    elegir,
+    aviso,
+    ocupado: () => ocupados > 0,
+    /** ¿Hay un texto esperando que el jugador avance? */
+    hayTexto: () => avanzar !== null,
+    /** Avanza el texto (lo usan los botones A y B). */
+    avanzarTexto: () => avanzar?.(),
+  };
 }
