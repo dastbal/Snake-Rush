@@ -28,3 +28,4 @@ Reglas:
 | [0006](adr/0006-guardado-en-localstorage.md) | Guardado en localStorage | Aceptado |
 | [0007](adr/0007-combate-que-devuelve-pasos.md) | Motor de combate que devuelve "pasos" | Aceptado |
 | [0008](adr/0008-criaturas-originales.md) | Criaturas y nombres originales | Aceptado |
+| [0009](adr/0009-mando-en-pantalla.md) | Mando en pantalla además de tocar el mapa | Aceptado |

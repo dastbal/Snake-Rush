@@ -34,8 +34,12 @@ escena.update() cada ~16 ms             (graficos/escena.js, game loop de Phaser
 
 ## Monster Rush: el viaje de un toque
 ```
-tocar el mapa (graficos/escenaMundo.js)
-   └─▶ buscarCamino()                     (nucleo/mundo.js, búsqueda en anchura)
+cruceta / A / B / START  (interfaz/mando.js, también teclado)
+   ├─ en un menú → mueve la selección / elige / VOLVER
+   └─ en el mundo → escena.pasoMando(dir) · hablarEnfrente()
+
+tocar el mapa y levantar el dedo sin deslizar (graficos/escenaMundo.js)
+   └─▶ buscarCamino()                     (nucleo/mundo.js, el más corto y con menos giros)
          └─▶ un paso a la vez → director.alLlegar(x, y)
                (interfaz/director.js)
                ├─ ¿salida?  → cambiar de mapa y guardar
@@ -56,5 +60,6 @@ tocar el mapa (graficos/escenaMundo.js)
 | Dibujos de losetas y personas | `monster-rush/src/datos/sprites.js` |
 | Fórmula de daño o captura | `monster-rush/src/nucleo/combate.js` |
 | Historia (qué dice cada puerta) | `monster-rush/src/interfaz/director.js` |
+| Botones del mando y teclas | `monster-rush/src/interfaz/mando.js` |
 | Música y efectos | `*/src/audio/sonido.js` |
 | Cómo se guarda | `compartido/guardado.js` · [guardado.md](guardado.md) |

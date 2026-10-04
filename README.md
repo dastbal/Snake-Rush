@@ -71,7 +71,8 @@ Las reglas (`snake/src/nucleo/`) no saben de dibujos ni sonidos: cambian el esta
 - Tipos con ventajas: fuego, agua, planta, normal, eléctrico y volador
 - Combate por turnos con 4 ataques, niveles, experiencia, pociones y bolas de captura
 - Un entrenador en la ruta y la **LÍDER VOLTA** al final (¡gana la Medalla Trueno!)
-- Toca el mapa para caminar (o usa las flechas); guardado automático y en el MENÚ
+- Mando en pantalla como un Game Boy (cruceta, A, B, START) o toca el mapa para caminar
+- Guardado automático y en el MENÚ (ver [docs/guardado.md](docs/guardado.md))
 
 **Cómo está hecho:**
 - `nucleo/combate.js` — el motor de combate devuelve una lista de "pasos" (texto, daño, debilitada, bola…) que la interfaz muestra uno por uno.
