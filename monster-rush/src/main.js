@@ -7,6 +7,7 @@
  *   audio/      → música y efectos de 8 bits
  *   interfaz/   → textos, menús, combate, título y el "director" de la historia
  */
+import '../../compartido/sin-zoom.js'; // sin zoom por doble toque o pellizco en iPad
 import { EscenaMundo } from './graficos/escenaMundo.js';
 import { EscenaCombate } from './graficos/escenaCombate.js';
 import { crearSonido } from './audio/sonido.js';

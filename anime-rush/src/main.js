@@ -8,6 +8,7 @@
  *   audio/      → música y golpes de 8 bits
  *   interfaz/   → menús, marcador y mandos
  */
+import '../../compartido/sin-zoom.js'; // sin zoom por doble toque o pellizco en iPad
 import { crearEventos } from '../../compartido/eventos.js';
 import { crearPelea } from './nucleo/pelea.js';
 import { crearIA } from './nucleo/ia.js';

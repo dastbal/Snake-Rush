@@ -9,6 +9,7 @@
  *
  * Las piezas se comunican con eventos (nucleo/eventos.js).
  */
+import '../../compartido/sin-zoom.js'; // sin zoom por doble toque o pellizco en iPad
 import { ANCHO, ALTO } from './config/ajustes.js';
 import { crearEventos } from './nucleo/eventos.js';
 import { crearReglas } from './nucleo/reglas.js';
