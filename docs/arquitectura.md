@@ -9,6 +9,7 @@ manifest.json     app instalable (ícono, nombre)
 compartido/       sintetizador.js · guardado.js
 snake/            Snake Rush
 monster-rush/     Monster Rush
+anime-rush/       Anime Rush
 docs/             esta documentación
 ```
 
@@ -60,6 +61,9 @@ tocar el mapa y levantar el dedo sin deslizar (graficos/escenaMundo.js)
 | Dibujos de losetas y personas | `monster-rush/src/datos/sprites.js` |
 | Fórmula de daño o captura | `monster-rush/src/nucleo/combate.js` |
 | Historia (qué dice cada puerta) | `monster-rush/src/interfaz/director.js` |
+| Luchadores, ataques y especiales | `anime-rush/src/datos/luchadores.js` |
+| Física, golpes, empuje y vidas | `anime-rush/src/nucleo/pelea.js` |
+| Rivales de la compu | `anime-rush/src/nucleo/ia.js` |
 | Botones del mando y teclas | `monster-rush/src/interfaz/mando.js` |
 | Música y efectos | `*/src/audio/sonido.js` |
 | Cómo se guarda | `compartido/guardado.js` · [guardado.md](guardado.md) |

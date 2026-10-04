@@ -8,6 +8,7 @@ Juegos retro para el navegador y el iPad, hechos con [Phaser](https://phaser.io)
 |---|---|
 | 🐍 **Snake Rush** (`/snake/`) | La serpiente clásica con 6 personajes, 3 niveles por mundo y 5 poderes |
 | 👾 **Monster Rush** (`/monster-rush/`) | RPG estilo Game Boy Color: atrapa criaturas, entrénalas y vence a la Líder |
+| 🥊 **Anime Rush** (`/anime-rush/`) | Peleas estilo Smash con 4 héroes de anime originales, 1 o 2 jugadores |
 
 Se instala como app: en iPad toca **Compartir → Agregar a pantalla de inicio**.
 
@@ -88,3 +89,18 @@ Las reglas (`snake/src/nucleo/`) no saben de dibujos ni sonidos: cambian el esta
 Las pruebas revisan que cada criatura, mapa, salida y puerta sea válida, así que si algo queda mal escrito, `npm test` te avisa.
 
 Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG de Game Boy.
+
+---
+
+## 🥊 Anime Rush
+
+- 4 luchadores originales con estilo anime: **RAIKO** (onda de energía), **KAGE** (clon de sombra), **RUFO** (puño elástico) y **SAYA** (corte veloz)
+- 4 escenarios: torneo en el cielo, aldea ninja, barco pirata y ciudad de noche
+- **A** golpe · **B** especial · **▲+B** súper salto para volver · doble salto · **▼** bajar de plataformas
+- Más daño (%) = sales volando más lejos. Reglas por **vidas** o por **tiempo**
+- Objetos: onigiri (cura), bomba y esfera de poder (especial más fuerte)
+- 1 jugador contra 1 a 3 rivales de la compu (3 dificultades) o **2 jugadores** en el mismo iPad
+
+**Cómo está hecho:** `nucleo/pelea.js` es un motor propio y puro ([ADR 0010](docs/adr/0010-motor-de-pelea-propio.md)); la IA aprieta los mismos botones que un jugador.
+
+**Agregar un luchador:** una entrada en `anime-rush/src/datos/luchadores.js` (cabeza de 11×16 letras + colores del cuerpo) y elegir su especial: `proyectil`, `clon`, `estirar` o `embestida`. **Un escenario:** `datos/escenarios.js` + un fondo en `graficos/fondos.js`.

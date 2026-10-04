@@ -29,3 +29,4 @@ Reglas:
 | [0007](adr/0007-combate-que-devuelve-pasos.md) | Motor de combate que devuelve "pasos" | Aceptado |
 | [0008](adr/0008-criaturas-originales.md) | Criaturas y nombres originales | Aceptado |
 | [0009](adr/0009-mando-en-pantalla.md) | Mando en pantalla además de tocar el mapa | Aceptado |
+| [0010](adr/0010-motor-de-pelea-propio.md) | Motor de pelea propio (sin la física de Phaser) | Aceptado |
