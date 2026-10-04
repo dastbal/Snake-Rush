@@ -10,6 +10,7 @@ Anime Rush empezó con 4 luchadores originales "inspirados en" animes (RAIKO, KA
 ## Decisión
 Usar los **32 personajes con sus nombres reales**, decidido por el dueño del proyecto conociendo el riesgo. Para reducirlo:
 - Los dibujos son **pixel art propio** hecho con letras (ADR 0004), sin copiar sprites ni imágenes oficiales.
+- **Cómo evitamos el plagio de arte:** nunca se calca ni se copia un dibujo (ni oficial ni de otros artistas de pixel art, aunque sirvan de inspiración de estilo). Cada personaje se arma con **moldes genéricos propios**: peinados, caras, y prendas comunes (abrigo largo, falda o kimono, chaleco abierto, estampado a cuadros, torso ancho). Lo que identifica al personaje son rasgos generales (colores, peinado, una prenda típica), no un dibujo concreto.
 - **Aviso visible** en el título del juego y en la portada: juego de fans, no oficial, gratuito; los personajes pertenecen a sus creadores.
 - **Sin fines de lucro:** no hay anuncios, pagos ni donaciones.
 
