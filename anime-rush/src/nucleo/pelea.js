@@ -20,7 +20,7 @@ export const FISICA = {
 };
 
 /** Tamaño del cuerpo (la caja que recibe golpes). */
-export const CUERPO = { ancho: 22, alto: 44 };
+export const CUERPO = { ancho: 22, alto: 48 };
 
 const INVENCIBLE_AL_VOLVER = 2;
 const RECUPERACION = { impulso: 640, duracion: 0.35, daño: 5, empuje: 300, angulo: 80 };

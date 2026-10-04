@@ -3,9 +3,12 @@
  * Juego de fans, no oficial y sin fines de lucro (ver ADR 0011): los personajes
  * pertenecen a sus dueños; los dibujos son pixel art propio, hecho con letras.
  *
- * Cada luchador se arma con piezas para no dibujar 32 cabezas desde cero:
- *  - pelo: uno de PELOS (6 filas) · cara: una de CARAS (5 filas)
- *  - colores: H pelo, S piel, A ropa arriba, C centro, D muñecas, P pantalón, F pies (+ extras)
+ * Arte de 32×51 píxeles, armado con piezas para no dibujar 32 figuras desde cero:
+ *  - pelo: uno de PELOS (12 filas) · cara: una de CARAS (9 filas) · cuerpo común (30 filas)
+ *  - colores: H pelo, S piel, E ojos, A ropa arriba, C centro/cinturón, D muñecas y tobillos,
+ *    P pantalón, F zapatos (+ extras como M, W, R, Y, G, N)
+ *  - Sombras automáticas: cada letra en minúscula es la versión oscura de su mayúscula
+ *    (s = piel en sombra, a = ropa en sombra…), así cada dibujo tiene volumen.
  *  - especial: uno de los 4 tipos del motor (proyectil, clon, estirar, embestida)
  *
  * Para agregar un luchador: agrega una línea con `luchador({...})` en su serie.
@@ -13,50 +16,295 @@
 
 const K = 0x181820;
 const PIEL = 0xf8c898;
+export const ANCHO_ARTE = 32;
+export const ALTO_ARTE = 51;
 
-// ---------- Piezas de la cabeza ----------
+/** Rellena filas a 32 columnas y completa arriba con filas vacías hasta `alto`. */
+function bloque(filas, alto) {
+  const llenas = filas.map((f) => f.padEnd(ANCHO_ARTE, '.').slice(0, ANCHO_ARTE));
+  while (llenas.length < alto) llenas.unshift('.'.repeat(ANCHO_ARTE));
+  return llenas.slice(-alto);
+}
+
+// ---------- Peinados (12 filas) ----------
 const PELOS = {
-  puntas: ['....K...K.......', '...KHK.KHK.K....', '..KHHHKHHHKHK...', '.KHHHHHHHHHHHK..', 'KHHHHHHHHHHHHHK.', '.KHHHHHHHHHHHK..'],
-  llama: ['......KK........', '.....KHHK.......', '....KHHHHK......', '...KHHHHHHK.....', '..KHHHHHHHHK....', '.KHHHHHHHHHHK...'],
-  corto: ['................', '....KKKKKK......', '..KKHHHHHHKK....', '.KHHHHHHHHHHK...', '.KHHHHHHHHHHK...', '.KHHKHHKHHHHK...'],
-  largo: ['................', '....KKKKKK......', '...KHHHHHHK.....', '..KHHHHHHHHK....', '.KHHHHHHHHHHK...', '.KHHHHHHHHHHK...'],
-  coletas: ['.K..........K...', 'KHK.KKKKKK.KHK..', 'KHHKHHHHHHKHHK..', '.KHHHHHHHHHHK...', '.KHHHHHHHHHHK...', '.KHHHHHHHHHHK...'],
-  banda: ['.....K..K.......', '..K.KHKKHK.K....', '.KHKHHHHHHKHK...', 'KHHHHHHHHHHHHK..', '.KMMMMMMMMMMMK..', '.KMMMMMLMMMMMK..'],
-  bandaAtras: ['................', '....KKKKK.KK....', '...KHHHHHKHHK...', '..KHHHHHHHHHHK..', '..KMMMMMMMMMMK..', '..KMMMMMLMMMMK..'],
-  bandaLado: ['..K.K.K.........', '.KHKHKHK........', 'KHHHHHHHKK......', '.KHHHHHHHHHK....', '.KMMMMMMMMMMK...', '.KMMMMMLMMMMK...'],
-  sombrero: ['.....KKKKKK.....', '....KYYYYYYK....', '...KYYYYYYYYK...', '...KRRRRRRRRK...', 'KKKYYYYYYYYYYKKK', '.KYYYYYYYYYYYYK.'],
-  turbante: ['.....KKKKKK.....', '....KWWWWWWK....', '...KWWWWWWWWK...', '...KPPPPPPPPK...', '...KWWWWWWWWK...', '....KWWWWWWK....'],
-  mitad: ['................', '....KKKKKK......', '..KKhhhHHHKK....', '.KhhhhhHHHHHK...', '.KhhhhhHHHHHK...', '.KhhKhhKHHHHK...'],
-  antenas: ['..K.......K.....', '.KHK.....KHK....', '.KHHK...KHHK....', '..KHHKKKHHK.....', '.KHHHHHHHHHK....', '.KHHHHHHHHHK....'],
-  cuernos: ['..K........K....', '..KWK....KWK....', '...KWKKKKWK.....', '..KHHHHHHHHK....', '.KHHHHHHHHHHK...', '.KHHHHHHHHHHK...'],
-  jabali: ['...K......K.....', '..KGK....KGK....', '..KGGKKKKGGK....', '.KGGGGGGGGGGK...', '.KGWKGGGGWKGK...', '.KGGGGGGGGGGK...'],
+  puntas: [
+    '..............K.....K',
+    '.........K...KHK...KHK',
+    '........KHK.KHHHK.KHHK...K',
+    '.....K..KHHKHHHHHKHHHK..KHK',
+    '....KHK.KHHHHHHHHHHHHHKKHHK',
+    '...KHHHKHHHHHHHHHHHHHHHHHHK',
+    '....KHHHHHHHHHHHHHHHHHHHHK',
+    '..KKHHHHHHHHHHHHHHHHHHHHHK',
+    '.KHHHHHHHhHHHHHHHHHHHHHHHK',
+    '..KKHHHHhHHHHHHhHHHHHHHK',
+    '....KHHhHHHKHHHHKHHHHHK',
+    '.....KHHKHKSSSHKSSSSHHK',
+  ],
+  llama: [
+    '...............KK',
+    '..............KHHK',
+    '.............KHHHHK',
+    '............KHHHHHHK',
+    '...........KHHHhHHHHK',
+    '..........KHHHhHHHHHHK',
+    '.........KHHHhHHHHHHHHK',
+    '........KHHHhHHHHHHHHHK',
+    '........KHHhHHHHHHHHHHHK',
+    '.........KHHHHHHHHHHHHHK',
+    '.........KHHKSSSSSSKHHK',
+    '.........KHKSSSSSSSSKHK',
+  ],
+  corto: [
+    '',
+    '',
+    '',
+    '............KKKKKK',
+    '..........KKHHHHHHKK',
+    '.........KHHHHHHHHHHK',
+    '........KHHHHHHHHHHHHK',
+    '........KHHHhHHHHHhHHHK',
+    '.......KHHHHHHHHHHHHHHK',
+    '........KHHhHHHHHHHHHHK',
+    '.........KHHKHHHKHHHHHK',
+    '.........KHKSSHKSSSHHK',
+  ],
+  largo: [
+    '',
+    '',
+    '',
+    '............KKKKKK',
+    '..........KKHHHHHHKK',
+    '.........KHHHHHHHHHHK',
+    '........KHHHHHHHHHHHHK',
+    '........KHHHHhHHHHHHHK',
+    '........KHHHHHHHHHHHHHK',
+    '........KHHhHHHHHHHHHHK',
+    '........KHHHHKHHHHKHHHK',
+    '........KHHHKSSSSSSKHHK',
+  ],
+  coletas: [
+    '....KK................KK',
+    '...KHHK..............KHHK',
+    '...KHHK....KKKKKK....KHHK',
+    '....KHHK.KKHHHHHHKK.KHHK',
+    '.....KHHKHHHHHHHHHHKHHK',
+    '......KHHHHHHHHHHHHHHK',
+    '.......KHHHHHHHHHHHHK',
+    '.......KHHHhHHHHHHHHK',
+    '.......KHHHHHHHHHHHHHK',
+    '........KHHhHHHHHHHHK',
+    '........KHHKHHHKHHHHK',
+    '........KHKSSSSSSSHHK',
+  ],
+  banda: [
+    '...........K....K',
+    '........K.KHK..KHK..K',
+    '.......KHKHHHKKHHHKKHK',
+    '.....K.KHHHHHHHHHHHHHHK',
+    '....KHKHHHHHHHHHHHHHHHHK',
+    '.....KHHHHHHHHHHHHHHHHK',
+    '......KHHHHHHHHHHHHHHHK',
+    '.......KMMMMMMMMMMMMMMK',
+    '.......KMMMMMMLLMMMMMMK',
+    '.......KMmmmmmmmmmmmmMK',
+    '........KHHKHHHKHHHHHK',
+    '.........KHKSSSKSSSSHK',
+  ],
+  bandaAtras: [
+    '',
+    '.....KK',
+    '....KHHKK......K',
+    '...KHHHHHKK...KHK',
+    '....KHHHHHHKKKHHK',
+    '...KHHHHHHHHHHHHHKK',
+    '..KHHHHHHHHHHHHHHHHK',
+    '...KHHHHHHHHHHHHHHHK',
+    '.....KMMMMMMMMMMMMMMK',
+    '.....KMMMMMMMLLMMMMMK',
+    '......KHHKHHHHKHHHHK',
+    '.......KHKSSSSSKSSHK',
+  ],
+  bandaLado: [
+    '...K.K',
+    '..KHKHK.K',
+    '.KHHHHHKHK.K',
+    '.KHHHHHHHHKHK',
+    '..KHHHHHHHHHHKK',
+    '...KHHHHHHHHHHHHK',
+    '....KHHHHHHHHHHHHHK',
+    '......KMMMMMMMMMMMMMK',
+    '......KMMMMMMMMLLMMMK',
+    '.......KMmmmmmmmmmmMK',
+    '........KHHKHHHKHHHK',
+    '.........KHKSSSKSSHK',
+  ],
+  sombrero: [
+    '',
+    '',
+    '...........KKKKKKKK',
+    '..........KYYYYYYYYK',
+    '.........KYYYYYYYYYYK',
+    '.........KYyYYYYYYyYK',
+    '.........KRRRRRRRRRRK',
+    '.....KKKKYYYYYYYYYYYYKKKK',
+    '....KYYYYYYYYYYYYYYYYYYYYK',
+    '.....KKyyyyyyyyyyyyyyyyKK',
+    '.........KHHKHHHKHHHHK',
+    '.........KHKSSSKSSSHK',
+  ],
+  turbante: [
+    '',
+    '',
+    '...........KKKKKKK',
+    '.........KKWWWWWWWKK',
+    '........KWWWWWWWWWWWK',
+    '........KWwWWWWWWWwWK',
+    '........KPPPPPPPPPPPK',
+    '........KPpppppppppPK',
+    '........KWWWWWWWWWWWK',
+    '.........KWwwwwwwwWK',
+    '.........KKSSSSSSSSK',
+    '.........KSSSSSSSSSK',
+  ],
+  antenas: [
+    '.......KK.........KK',
+    '......KHHK.......KHHK',
+    '......KHHK.......KHHK',
+    '.......KHHK.....KHHK',
+    '.......KHHK.....KHHK',
+    '........KHHK...KHHK',
+    '.........KHHKKKHHK',
+    '........KHHHHHHHHHHK',
+    '.......KHHHHHHHHHHHHK',
+    '.......KHHhHHHHHHHHHHK',
+    '........KHHKHHHHKHHHK',
+    '........KHKSSSSSSSSHK',
+  ],
+  cuernos: [
+    '.........KK......KK',
+    '.........KWK....KWK',
+    '..........KWK..KWK',
+    '...........KWKKWK',
+    '..........KKHHHHKK',
+    '.........KHHHHHHHHK',
+    '........KHHHHHHHHHHK',
+    '........KHHHhHHHHHHHK',
+    '.......KHHHHHHHHHHHHK',
+    '........KHHhHHHHHHHHK',
+    '.........KHHKHHHKHHHK',
+    '.........KHKSSHKSSSHK',
+  ],
+  jabali: [
+    '..........K........K',
+    '.........KGK......KGK',
+    '.........KGGK....KGGK',
+    '........KGGGGKKKKGGGGK',
+    '.......KGGGGGGGGGGGGGGK',
+    '.......KGGgGGGGGGGGgGGK',
+    '.......KGGGGGGGGGGGGGGK',
+    '.......KGgGGGGGGGGGGgGK',
+    '.......KGGGGGGGGGGGGGGK',
+    '.......KGGWKGGGGGGWKGGK',
+    '.......KGGGGGGGGGGGGGGK',
+    '........KGGGGGGGGGGGGK',
+  ],
 };
+// Todoroki: el pelo "corto" con la mitad izquierda de otro color (h)
+PELOS.mitad = PELOS.corto.map((f) => [...f].map((c, x) => (x < 16 && c === 'H' ? 'h' : c)).join(''));
 
-const CARAS = {
-  normal: ['..KHHSSSSSSHK...', '..KHSSSSKSSSK...', '..KSSSSSKSSSK...', '...KSSSSSSSK....', '....KSSSSSK.....'],
-  larga: ['.KHHSSSSSSHHK...', '.KHSSSSKSSSHK...', '.KHSSSSKSSSHK...', '.KHKSSSSSSKHK...', '..K.KSSSSSK.K...'],
-  mascara: ['..KHHSSSSSSHK...', '..KHSSSSKSSSK...', '..KMMMMMMMMMK...', '...KMMMMMMMK....', '....KMMMMMK.....'],
-  venda: ['..KWWWWWWWWWK...', '..KWWWWWWWWWK...', '..KSSSSSSSSSK...', '...KSSSSSSSK....', '....KSSSSSK.....'],
-  cicatriz: ['..KHHSSSSSSHK...', '..KHRSSSKSSSK...', '..KRSSSSKSSSK...', '...KSSSSSSSK....', '....KSSSSSK.....'],
-  jabali: ['..KGGNNNNNGGK...', '..KGNKNNNKNGK...', '..KGGNNNNNGGK...', '...KGGGGGGGK....', '....KSSSSSK.....'],
-};
-
-/** Plantilla del cuerpo (13 filas). A = ropa arriba · C = centro · D = muñecas · P = pantalón · F = pies */
-const CUERPO = [
-  '...KAAACAAAK....',
-  '..KAAAACAAAAK...',
-  '.KSAAAACAAAASK..',
-  '.KSKAAAAAAAKSK..',
-  '.KDKAAAAAAAKDK..',
-  '..K.KCCCCCK.K...',
-  '....KPPPPPK.....',
-  '....KPPKPPK.....',
-  '....KPPKPPK.....',
-  '....KPPKPPK.....',
-  '....KFFKFFK.....',
-  '...KFFFKFFFK....',
-  '...KKKKKKKKK....',
+// ---------- Caras (9 filas): ojos estilo anime con brillo (W) e iris (E) ----------
+const OJOS = [
+  '.........KHHSSSSSSSSHHK',
+  '.........KHSSSSSSSSSSHK',
+  '.........KHSKKSSSSKKSSK',
+  '.........KSSWEsSSSWEsSK',
+  '.........KSSWEsSSSWEsSK',
 ];
+const BOCA = [
+  '..........KSSSSSSsSSSK',
+  '..........KsSSSKKSSSK',
+  '...........KsSSSSSSK',
+  '............KKsssKK',
+];
+const CARAS = {
+  normal: [...OJOS, ...BOCA],
+  larga: [
+    '........KHHHSSSSSSSSHHHK',
+    '........KHHSSSSSSSSSSHHK',
+    '........KHHSKKSSSSKKSHHK',
+    '........KHHSWEsSSSWEsHHK',
+    '........KHHSWEsSSSWEsHHK',
+    '........KHHKSSSSSsSSKHHK',
+    '........KHHKsSSKKSSKHHK',
+    '........KHHHKsSSSSKHHHK',
+    '........KHHHHKKsssKHHHHK',
+  ],
+  mascara: [...OJOS, '..........KMMMMMMMMMMK', '..........KMmmmmmmmMK', '...........KMMMMMMMK', '............KKsssKK'],
+  venda: [
+    '.........KHHSSSSSSSSHHK',
+    '.........KHSSSSSSSSSSHK',
+    '.........KWWWWWWWWWWWWK',
+    '.........KWwwwwwwwwwwWK',
+    '.........KSSSSSSSSSSSSK',
+    ...BOCA,
+  ],
+  cicatriz: [
+    '.........KHHSSSSSSSSHHK',
+    '.........KHSSSSSSSSSSHK',
+    '.........KHRKKSSSSKKSSK',
+    '.........KSRWEsSSSWEsSK',
+    '.........KRSWEsSSSWEsSK',
+    ...BOCA,
+  ],
+  jabali: [
+    '.......KGGGGNNNNNNGGGGK',
+    '.......KGGGNNNNNNNNGGGK',
+    '.......KGGGNKNNNNKNGGGK',
+    '.......KGGGNNNNNNNNGGGK',
+    '........KGGGnnnnnnGGGK',
+    '.........KGGGGGGGGGK',
+    '..........KSSKKSSK',
+    '...........KsSSSK',
+    '............KKKK',
+  ],
+};
+
+// ---------- Cuerpo (30 filas): hombros, brazos, puños y piernas largas ----------
+const PIERNA = '.........KPPPpK.KPPPpK';
+const CUERPO = [
+  '............KsSSsK',
+  '.........KKKAACCAAKKK',
+  '.......KKAAAAACCAAAAAKK',
+  '......KAAAAAAACCAAAAAaaK',
+  '.....KaAAAAAAACCAAAAAAaaK',
+  '.....KaAAKAAAACCAAAAKAaaK',
+  '....KsSKaAAAAACCAAAAAKaSsK',
+  '....KSSKaAAAAACCAAAAAKaSSK',
+  '....KSsKaAAAAACCAAAAAKaSsK',
+  '....KSSKKaAAAACCAAAAKKKSSK',
+  '....KDDK.KaAAACCAAAaK.KDDK',
+  '....KSSK.KCCCCCCCCCCK.KSSK',
+  '....KssK.KPPPPPPPPPPK.KssK',
+  '.....KK..KPPPPPPPPPPK..KK',
+  '.........KPPPPpKPPPPpK',
+  PIERNA, PIERNA, PIERNA,
+  '.........KPPpPK.KPPpPK', // rodillas
+  PIERNA, PIERNA, PIERNA, PIERNA, PIERNA, PIERNA,
+  '.........KDDDDK.KDDDDK',
+  '.........KFFFFFFKFFFFFFK',
+  '.........KFFFFFFKFFFFFFFK',
+  '.........KKKKKKKKKKKKKKKK',
+];
+
+/** Versión oscura de un color (para las sombras). */
+function oscurecer(color, factor = 0.68) {
+  const r = Math.floor(((color >> 16) & 255) * factor);
+  const g = Math.floor(((color >> 8) & 255) * factor);
+  const b = Math.floor((color & 255) * factor);
+  return (r << 16) | (g << 8) | b;
+}
 
 // ---------- Especiales (los 4 tipos que entiende el motor) ----------
 const proyectil = (nombre, color, extra = {}) => ({ tipo: 'proyectil', nombre, carga: 0.3, velocidad: 420, radio: 10, daño: 12, empuje: 420, angulo: 30, color, ...extra });
@@ -69,7 +317,12 @@ const embestida = (nombre, extra = {}) => ({ tipo: 'embestida', nombre, distanci
  * colores: { H, A, C, D, P, F, S? y extras como M, W, R… }
  */
 function luchador({ nombre, lema, color, pelo, cara = 'normal', colores, especial, espada = false, stats = {}, poder = null }) {
-  const paleta = { K, S: PIEL, W: 0xffffff, M: 0x9aa4b0, L: 0x40485a, R: 0xd02828, Y: 0xf0d060, P: 0x7040a0, G: 0x8a8a90, h: 0xf0f0f0, ...colores };
+  const base = { K, S: PIEL, E: 0x202030, W: 0xffffff, M: 0x9aa4b0, L: 0x40485a, R: 0xd02828, Y: 0xf0d060, P: 0x7040a0, G: 0x8a8a90, N: 0xe0a0a0, ...colores };
+  // Sombras: cada mayúscula tiene su minúscula oscura (salvo que ya venga definida)
+  const paleta = { ...base };
+  for (const [letra, c] of Object.entries(base)) {
+    if (letra === letra.toUpperCase() && paleta[letra.toLowerCase()] === undefined) paleta[letra.toLowerCase()] = oscurecer(c);
+  }
   return {
     nombre, lema, color,
     stats: { peso: 1, velocidad: 240, salto: 580, ...stats },
@@ -79,7 +332,7 @@ function luchador({ nombre, lema, color, pelo, cara = 'normal', colores, especia
     especial,
     paleta,
     paletaPoder: poder,
-    cabeza: [...PELOS[pelo], ...CARAS[cara]],
+    arte: [...bloque(PELOS[pelo], 12), ...bloque(CARAS[cara], 9), ...bloque(CUERPO, 30)],
   };
 }
 
@@ -166,5 +419,5 @@ export const LUCHADORES = Object.fromEntries(
   Object.entries(SERIES).flatMap(([serie, s]) => Object.entries(s.luchadores).map(([id, l]) => [id, { ...l, serie }])),
 );
 
-/** Arte completo (16×24) de un luchador: su cabeza + la plantilla del cuerpo. */
-export const arteDe = (id) => [...LUCHADORES[id].cabeza, ...CUERPO];
+/** Arte completo (32×51) de un luchador: pelo + cara + cuerpo. */
+export const arteDe = (id) => LUCHADORES[id].arte;

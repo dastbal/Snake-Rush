@@ -35,12 +35,12 @@ test('hay 8 series de 4 luchadores', async () => {
   for (const [id, s] of Object.entries(SERIES)) assert.equal(Object.keys(s.luchadores).length, 4, id);
 });
 
-test('cada luchador tiene arte 16×24 con colores válidos y un especial conocido', () => {
+test('cada luchador tiene arte 32×51 con colores válidos y un especial conocido', () => {
   for (const [id, l] of Object.entries(LUCHADORES)) {
     const arte = arteDe(id);
-    assert.equal(arte.length, 24, `${id}: 24 filas`);
+    assert.equal(arte.length, 51, `${id}: 51 filas`);
     for (const fila of arte) {
-      assert.equal(fila.length, 16, `${id}: filas de 16`);
+      assert.equal(fila.length, 32, `${id}: filas de 32`);
       for (const letra of fila) assert.ok(letra === '.' || l.paleta[letra] !== undefined, `${id}: color ${letra}`);
     }
     assert.ok(['proyectil', 'clon', 'estirar', 'embestida'].includes(l.especial.tipo), `${id}: especial`);
@@ -195,6 +195,6 @@ test('la IA vuelve al escenario si se cae', () => {
   assert.ok(yo.y <= ESCENARIOS.cielo.suelo.y + 1, 'está sobre el escenario (puede estar saltando)');
 });
 
-test('el cuerpo cabe en el dibujo (16×24 al doble = 32×48)', () => {
-  assert.ok(CUERPO.ancho <= 32 && CUERPO.alto <= 48);
+test('el cuerpo cabe en el dibujo (32×51)', () => {
+  assert.ok(CUERPO.ancho <= 32 && CUERPO.alto <= 51);
 });

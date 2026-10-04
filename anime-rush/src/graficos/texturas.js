@@ -4,8 +4,8 @@
 import { LUCHADORES, arteDe } from '../datos/luchadores.js';
 import { lienzo } from '../../../compartido/pixelart.js';
 
-/** Los luchadores se dibujan al doble: 16×24 letras → 32×48 píxeles. */
-export const ESCALA = 2;
+/** Los luchadores ya miden 32×51: se dibujan a tamaño real (1 letra = 1 píxel). */
+export const ESCALA = 1;
 
 export function crearTexturas(escena) {
   for (const [id, l] of Object.entries(LUCHADORES)) {
