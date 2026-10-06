@@ -75,6 +75,48 @@ export const FONDOS = {
       }
     }
   },
+  shibuya(g) {
+    // Noche en Shibuya bajo la cortina: cielo morado y una cúpula oscura encima
+    degradado(g, 0x120818, 0x40204a);
+    g.fillStyle(0x000000, 0.45);
+    g.fillEllipse(W / 2, 0, W * 1.3, 190);
+    g.lineStyle(1, 0x8040a0, 0.6);
+    g.strokeEllipse(W / 2, 0, W * 1.3, 190);
+    // Edificios con pantallas gigantes y letreros
+    const edificios = [[0, 150, 60], [64, 110, 50], [118, 175, 70], [300, 165, 64], [368, 120, 50], [420, 150, 60]];
+    for (const [x, h, w] of edificios) {
+      g.fillStyle(0x1c1426);
+      g.fillRect(x, H - h, w, h);
+      for (let wy = H - h + 30; wy < H - 20; wy += 12) {
+        for (let wx = x + 5; wx < x + w - 6; wx += 9) {
+          g.fillStyle(0xffe0a0, (wx + wy) % 4 === 0 ? 0.15 : 0.55);
+          g.fillRect(wx, wy, 4, 5);
+        }
+      }
+      g.fillStyle([0xff3060, 0x30d0ff, 0xffd030][x % 3]); // pantalla
+      g.fillRect(x + 6, H - h + 8, w - 12, 14);
+    }
+    // Torre cilíndrica con su letrero (inspirada en las de la zona, sin marcas reales)
+    g.fillStyle(0x2a2030);
+    g.fillRect(205, H - 190, 70, 190);
+    g.fillStyle(0xe8e0f0);
+    g.fillRect(212, H - 182, 56, 16);
+    g.fillStyle(0xd02040);
+    g.fillRect(222, H - 178, 36, 8);
+    // Cruce de peatones con sus rayas
+    g.fillStyle(0x2a2a34);
+    g.fillRect(0, H - 40, W, 40);
+    g.fillStyle(0xe8e8f0, 0.6);
+    for (let x = 0; x < W; x += 22) g.fillRect(x, H - 30, 12, 20);
+    // Semáforos en rojo
+    for (const x of [30, 440]) {
+      g.fillStyle(0x101010);
+      g.fillRect(x, H - 90, 4, 50);
+      g.fillRect(x - 4, H - 100, 12, 12);
+      g.fillStyle(0xff2020);
+      g.fillCircle(x + 2, H - 94, 3);
+    }
+  },
 };
 
 /** Estilo de las plataformas de cada escenario. */
@@ -83,6 +125,7 @@ const PISOS = {
   aldea: { arriba: 0xc08850, cuerpo: 0x8a5a30, borde: 0x4a2a10 },
   barco: { arriba: 0xb07840, cuerpo: 0x7a4a20, borde: 0x3a2010 },
   ciudad: { arriba: 0x4fd8ff, cuerpo: 0x2a2048, borde: 0xff4f9a },
+  shibuya: { arriba: 0x9a9aa8, cuerpo: 0x4a4458, borde: 0xd02040 },
 };
 
 export function pintarPlataformas(g, escenario, superficies) {

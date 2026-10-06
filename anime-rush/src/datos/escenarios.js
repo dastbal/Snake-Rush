@@ -34,6 +34,13 @@ export const ESCENARIOS = {
     suelo: { x: 100, y: 195, ancho: 280 },
     plataformas: [{ x: 40, y: 165, ancho: 60 }, { x: 380, y: 165, ancho: 60 }, { x: 200, y: 130, ancho: 80 }],
   },
+  shibuya: {
+    nombre: 'Shibuya',
+    fondo: 'shibuya', musica: 'shibuya',
+    // El cruce de la estación bajo la cortina oscura; el techo de los trenes y los letreros son plataformas
+    suelo: { x: 80, y: 205, ancho: 320 },
+    plataformas: [{ x: 50, y: 150, ancho: 90 }, { x: 340, y: 150, ancho: 90 }, { x: 190, y: 105, ancho: 100 }],
+  },
 };
 
 /** Zona de muerte: si sales de este rectángulo, pierdes una vida. */

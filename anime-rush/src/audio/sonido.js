@@ -11,6 +11,7 @@ const MELODIAS = {
   torneo: { notas: [A4, A4, C5, A4, D5, C5, A4, G4, A4, A4, C5, A4, E5, D5, C5, 0], ms: 120, tipo: 'square', vol: 0.035 },
   aldea: { notas: [E4, G4, A4, 0, B4, A4, G4, E4, D4, E4, G4, 0, E4, D4, C4, 0], ms: 140, tipo: 'triangle', vol: 0.06 },
   barco: { notas: [D4, D4, A4, 0, G4, E4, D4, 0, C4, C4, G4, 0, E4, D4, C4, A3], ms: 150, tipo: 'square', vol: 0.035 },
+  shibuya: { notas: [E4, 0, E4, G4, 0, A3, 0, B4, A4, 0, G4, E4, D4, 0, E4, 0], ms: 130, tipo: 'sawtooth', vol: 0.03 },
   ciudad: { notas: [A3, A4, A3, A4, C4, C5, C4, C5, D4, D5, D4, D5, E4, E5, G4, E5], ms: 110, tipo: 'sawtooth', vol: 0.03 },
 };
 

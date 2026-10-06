@@ -97,10 +97,11 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 ## 🥊 Anime Rush
 
 - 32 personajes, 4 de cada anime: **Dragon Ball** (Goku, Vegeta, Gohan, Piccolo), **Naruto** (Naruto, Sasuke, Kakashi, Sakura), **One Piece** (Luffy, Zoro, Sanji, Nami), **Bleach** (Ichigo, Rukia, Renji, Byakuya), **Jujutsu Kaisen** (Yuji, Megumi, Nobara, Gojo), **My Hero Academia** (Deku, Bakugo, Todoroki, All Might), **Slime** (Rimuru, Benimaru, Shion, Milim) y **Demon Slayer** (Tanjiro, Nezuko, Zenitsu, Inosuke)
-- 4 escenarios: torneo en el cielo, aldea ninja, barco pirata y ciudad de noche
+- 5 escenarios: torneo en el cielo, aldea ninja, barco pirata, ciudad de noche y **Shibuya**
 - **A** golpe · **B** especial · **▲+B** súper salto para volver · doble salto · **▼** bajar de plataformas
 - **Combos:** **A-A-A** (el 3.er golpe lanza) · **▲+A** golpe hacia arriba · **▼+A** barrida · **A en el aire** patada aérea · contador **"3 HITS!"**
 - **Súper:** **▼ ▶ B** hace la versión SÚPER del especial (¡KAMEHAMEHA SÚPER!), el doble de fuerte
+- **Gojo** tiene 4 poderes: **B** Azul (jala) · **▶+B** Rojo (empuja) · **▼+B** Infinito (nada lo toca) · **▼ ▶ B** Púrpura hueco (atraviesa todo)
 - Más daño (%) = sales volando más lejos. Reglas por **vidas** o por **tiempo**
 - Objetos: onigiri (cura), bomba y esfera de poder (especial más fuerte)
 - Flechas y A/B son **botones de arcade**: se tocan y se mantienen (arrastrar el dedo no cambia de botón)
@@ -108,6 +109,6 @@ Las criaturas y personajes de Monster Rush son originales, inspirados en los RPG
 
 **Cómo está hecho:** `nucleo/pelea.js` es un motor propio y puro ([ADR 0010](docs/adr/0010-motor-de-pelea-propio.md)); la IA aprieta los mismos botones que un jugador.
 
-**Agregar un luchador:** una línea `luchador({...})` en su serie en `anime-rush/src/datos/luchadores.js`: elige un `pelo` y una `cara` de las piezas, sus colores y su especial (`proyectil`, `clon`, `estirar` o `embestida`).
+**Agregar un luchador:** una línea `luchador({...})` en su serie en `anime-rush/src/datos/luchadores.js`: elige un `pelo` y una `cara` de las piezas, sus colores y su especial (`proyectil`, `clon`, `estirar`, `embestida` o `escudo`). Para darle más de un poder usa `poderes: { lado, abajo, super }` (mira a Gojo).
 
 > ⚠️ **Juego de fans no oficial y gratuito.** Los personajes de Anime Rush pertenecen a sus creadores y editoriales; los dibujos son pixel art propio. Ver [ADR 0011](docs/adr/0011-personajes-de-anime-reales.md). **Un escenario:** `datos/escenarios.js` + un fondo en `graficos/fondos.js`.
