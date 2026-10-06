@@ -77,7 +77,7 @@ export function crearMenus({ capa, sonido }) {
         titulo: `${titulo}: ${SERIES[serie].nombre.toUpperCase()}`, columnas: 4, clase: 'menu-luchadores',
         opciones: Object.keys(SERIES[serie].luchadores).map((lid) => {
           const l = LUCHADORES[lid];
-          return { texto: l.nombre, detalle: `${l.lema}\nB: ${l.especial.nombre}`, imagen: retrato(lid, 3), color: l.color, valor: lid };
+          return { texto: l.nombre, detalle: `${l.lema}\nB: ${l.especial.nombre}${l.poderes ? `\n▶B: ${l.poderes.lado?.nombre ?? '-'} · ▼B: ${l.poderes.abajo?.nombre ?? '-'}\n▼▶B: ${l.poderes.super?.nombre ?? '-'}` : ''}`, imagen: retrato(lid, 3), color: l.color, valor: lid };
         }),
       });
       if (id !== VOLVER) return id;

@@ -184,13 +184,24 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     }
   }
 
-  /** Especial (B). Con el súper combo (▼ ▶ B) sale la versión SÚPER, el doble de fuerte. */
-  function iniciarEspecial(l, esSuper = false) {
-    const e = LUCHADORES[l.personaje].especial;
-    const potencia = l.potenciado * (esSuper ? COMBOS.potenciaSuper : 1);
+  /**
+   * Especial (B). Algunos luchadores tienen varios poderes (ver `poderes` en datos/luchadores.js):
+   *  B = especial · ◀/▶+B = poderes.lado · ▼+B = poderes.abajo · ▼ ▶ B = poderes.super
+   * Si no tiene súper propio, el súper combo hace su especial el doble de fuerte.
+   */
+  function iniciarEspecial(l, esSuper = false, cual = 'neutral') {
+    const datos = LUCHADORES[l.personaje];
+    const poderes = datos.poderes || {};
+    let e = datos.especial;
+    let multiplicador = 1;
+    if (esSuper) {
+      if (poderes.super) e = poderes.super;
+      else multiplicador = COMBOS.potenciaSuper;
+    } else if (poderes[cual]) e = poderes[cual];
+    const potencia = l.potenciado * multiplicador;
     l.potenciado = 1;
     const duracion = e.tipo === 'proyectil' ? e.carga + 0.15 : e.duracion + 0.05;
-    l.ataque = { tipo: 'especial', especial: e.tipo, t: 0, duracion, golpeados: new Set(), potencia, x0: l.x, disparado: false, super: esSuper };
+    l.ataque = { tipo: 'especial', especial: e.tipo, e, t: 0, duracion, golpeados: new Set(), potencia, x0: l.x, disparado: false, super: esSuper };
     emitir('especial', { quien: l.indice, tipo: e.tipo, potencia, super: esSuper, nombre: e.nombre, x: l.x, y: l.y - CUERPO.alto });
   }
 
@@ -223,13 +234,14 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
     } else if (a.tipo === 'recuperacion') {
       revisarCaja(l, { x: l.x - 18, y: l.y - 52, w: 36, h: 56 }, RECUPERACION);
     } else if (a.tipo === 'especial') {
-      const e = datos.especial;
+      const e = a.e;
       const fuerte = { daño: e.daño * a.potencia, empuje: e.empuje * a.potencia, angulo: e.angulo };
       if (a.especial === 'proyectil' && !a.disparado && a.t >= e.carga) {
         a.disparado = true;
         estado.proyectiles.push({
           dueño: l.indice, x: l.x + l.mira * 18, y: l.y - 28, vx: l.mira * e.velocidad,
           radio: e.radio * Math.sqrt(a.potencia), ...fuerte, vida: 1.6, color: e.color,
+          atrae: Boolean(e.atrae), atraviesa: Boolean(e.atraviesa), golpeados: new Set(),
         });
       }
       if (a.especial === 'clon') {
@@ -242,6 +254,11 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
         const extension = a.t < mitad ? a.t / mitad : Math.max(0, 1 - (a.t - mitad) / mitad);
         a.punoX = l.x + l.mira * (14 + e.alcance * extension);
         if (extension > 0.3) revisarCaja(l, { x: a.punoX - 8, y: l.y - 36, w: 16, h: 14 }, fuerte);
+      }
+      if (a.especial === 'escudo') {
+        // Barrera (como el Infinito de Gojo): nada lo toca mientras dura
+        l.invencible = Math.max(l.invencible, 0.05);
+        l.vx *= 0.8;
       }
       if (a.especial === 'embestida') {
         if (a.t < e.duracion) {
@@ -313,7 +330,7 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
       iniciarGolpe(l, ent, sigue ? l.cadena.paso + 1 : 1);
     } else if (apreto('B')) {
       if (ent.arriba && !l.usoRecuperacion) iniciarRecuperacion(l);
-      else if (!ent.arriba) iniciarEspecial(l, hizoSuperCombo(l));
+      else if (!ent.arriba) iniciarEspecial(l, hizoSuperCombo(l), ent.abajo ? 'abajo' : ent.izq || ent.der ? 'lado' : 'neutral');
     }
   }
 
@@ -441,7 +458,12 @@ export function crearPelea({ jugadores, escenario, reglas, objetos = true, azar 
       const caja = { x: p.x - p.radio, y: p.y - p.radio, w: p.radio * 2, h: p.radio * 2 };
       for (const l of luchadores) {
         if (l.indice === p.dueño || l.fuera || p.vida <= 0) continue;
-        if (choca(caja, cajaCuerpo(l)) && golpear(l, p, Math.sign(p.vx), luchadores[p.dueño])) p.vida = 0;
+        if (p.golpeados.has(l.indice) || !choca(caja, cajaCuerpo(l))) continue;
+        // atrae: jala hacia quien lo lanzó · atraviesa: sigue de largo después de pegar
+        if (golpear(l, p, Math.sign(p.vx) * (p.atrae ? -1 : 1), luchadores[p.dueño])) {
+          p.golpeados.add(l.indice);
+          if (!p.atraviesa) p.vida = 0;
+        }
       }
       if (p.x < LIMITES.izquierda || p.x > LIMITES.derecha) p.vida = 0;
     }

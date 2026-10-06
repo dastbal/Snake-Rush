@@ -169,8 +169,8 @@ export class EscenaPelea extends Phaser.Scene {
     if (a.tipo !== 'especial') return;
     if (a.especial === 'proyectil' && !a.disparado) {
       // Cargando la onda: una bola que crece frente a las manos
-      const r = 3 + (a.t / datos.especial.carga) * datos.especial.radio;
-      g.fillStyle(datos.especial.color, 0.8);
+      const r = 3 + (a.t / a.e.carga) * a.e.radio;
+      g.fillStyle(a.e.color, 0.8);
       g.fillCircle(l.x + l.mira * 18, pechoY, r);
     }
     if (a.especial === 'clon' && a.clonX !== undefined) {
@@ -181,6 +181,13 @@ export class EscenaPelea extends Phaser.Scene {
       g.lineBetween(l.x + l.mira * 8, pechoY, a.punoX, pechoY);
       g.fillStyle(datos.paleta.R ?? 0xd02828);
       g.fillCircle(a.punoX, pechoY, 7);
+    }
+    if (a.especial === 'escudo') {
+      // Barrera brillante alrededor del cuerpo
+      g.lineStyle(2, a.e.color, 0.9);
+      g.strokeCircle(l.x, l.y - 24, 26 + Math.sin(tiempo / 40) * 2);
+      g.fillStyle(a.e.color, 0.18);
+      g.fillCircle(l.x, l.y - 24, 26);
     }
     if (a.especial === 'embestida') {
       g.lineStyle(2, 0xe8f0ff, 0.9);

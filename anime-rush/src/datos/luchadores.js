@@ -378,13 +378,14 @@ function oscurecer(color, factor = 0.68) {
 const proyectil = (nombre, color, extra = {}) => ({ tipo: 'proyectil', nombre, carga: 0.3, velocidad: 420, radio: 10, daño: 12, empuje: 420, angulo: 30, color, ...extra });
 const clon = (nombre, extra = {}) => ({ tipo: 'clon', nombre, distancia: 200, duracion: 0.4, daño: 10, empuje: 380, angulo: 35, ...extra });
 const estirar = (nombre, extra = {}) => ({ tipo: 'estirar', nombre, alcance: 150, duracion: 0.32, daño: 13, empuje: 430, angulo: 25, ...extra });
+const escudo = (nombre, color, extra = {}) => ({ tipo: 'escudo', nombre, color, duracion: 0.9, daño: 0, empuje: 0, angulo: 0, ...extra });
 const embestida = (nombre, extra = {}) => ({ tipo: 'embestida', nombre, distancia: 130, duracion: 0.25, daño: 11, empuje: 400, angulo: 30, ...extra });
 
 /**
  * Arma un luchador a partir de sus piezas.
  * colores: { H, A, C, D, P, F, S? y extras como M, W, R… }
  */
-function luchador({ nombre, lema, color, pelo, cara = 'normal', ropa = {}, colores, especial, espada = false, stats = {}, poder = null }) {
+function luchador({ nombre, lema, color, pelo, cara = 'normal', ropa = {}, colores, especial, poderes = null, espada = false, stats = {}, poder = null }) {
   const base = { K, S: PIEL, E: 0x202030, B: 0x24242c, W: 0xffffff, M: 0x9aa4b0, L: 0x40485a, R: 0xd02828, Y: 0xf0d060, P: 0x7040a0, G: 0x8a8a90, N: 0xe0a0a0, ...colores };
   // Sombras: cada mayúscula tiene su minúscula oscura (salvo que ya venga definida)
   const paleta = { ...base };
@@ -393,6 +394,7 @@ function luchador({ nombre, lema, color, pelo, cara = 'normal', ropa = {}, color
   }
   return {
     nombre, lema, color,
+    poderes, // opcional: { lado, abajo, super } → más de un poder
     stats: { peso: 1, velocidad: 240, salto: 580, ...stats },
     golpe: espada
       ? { alcance: 44, daño: 6, empuje: 250, angulo: 35, duracion: 0.22, espada: true }
@@ -450,7 +452,12 @@ export const SERIES = {
       yuji: luchador({ nombre: 'YUJI', lema: 'Recipiente de Sukuna', color: '#e07090', pelo: 'corto', colores: { H: 0xf0a0b0, A: 0x203050, C: ROJO, D: 0x203050, P: 0x203050, F: ROJO }, especial: embestida('Puño divergente', { distancia: 100, daño: 13 }), stats: { velocidad: 265 } }),
       megumi: luchador({ nombre: 'MEGUMI', lema: 'Técnica de las diez sombras', color: '#303050', pelo: 'puntas', colores: { H: 0x202030, A: 0x203050, C: 0x203050, D: 0x203050, P: 0x203050, F: NEGRO }, especial: clon('Perros divinos', { daño: 11 }) }),
       nobara: luchador({ nombre: 'NOBARA', lema: 'Martillo y clavos', color: '#d07030', pelo: 'largo', cara: 'larga', colores: { H: 0xd07030, A: 0x203050, C: 0x203050, D: 0x203050, P: 0x203050, F: 0x6a4020 }, especial: proyectil('Resonancia', 0xc0c8d0, { radio: 6, velocidad: 520 }), stats: { peso: 0.9 } }),
-      gojo: luchador({ ropa: { piernas: 'abrigo' },  nombre: 'GOJO', lema: 'El hechicero más fuerte', color: '#80c0ff', pelo: 'puntas', cara: 'venda', colores: { H: 0xf0f0f8, A: 0x203050, C: 0x203050, D: 0x203050, P: 0x203050, F: NEGRO }, especial: proyectil('Púrpura hueco', 0xa050ff, { radio: 16, daño: 15, velocidad: 300, carga: 0.45 }) }),
+      gojo: luchador({ ropa: { piernas: 'abrigo' },  nombre: 'GOJO', lema: 'El hechicero más fuerte', color: '#80c0ff', pelo: 'puntas', cara: 'venda', colores: { H: 0xf0f0f8, A: 0x203050, C: 0x203050, D: 0x203050, P: 0x203050, F: NEGRO }, especial: proyectil('Azul', 0x3a7aff, { radio: 12, daño: 9, velocidad: 260, empuje: 300, atrae: true }),
+        poderes: {
+          lado: proyectil('Rojo', 0xff3040, { radio: 10, daño: 13, velocidad: 520, empuje: 560, angulo: 25, carga: 0.35 }),
+          abajo: escudo('Infinito', 0x9ad8ff),
+          super: proyectil('Púrpura hueco', 0xa050ff, { radio: 24, daño: 24, velocidad: 280, empuje: 700, angulo: 35, carga: 0.6, atraviesa: true }),
+        } }),
     },
   },
   mha: {

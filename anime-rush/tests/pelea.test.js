@@ -280,3 +280,40 @@ test('cadena A-A-A con toques lentos (como en el iPad) también funciona', () =>
   const pasos = eventos.filter(([n]) => n === 'cadena').map(([, d]) => d.paso);
   assert.deepEqual(pasos, [2, 3]);
 });
+
+// ---------- Gojo: varios poderes ----------
+const conGojo = (eventos) => nueva({ jugadores: [{ personaje: 'gojo' }, { personaje: 'naruto' }], emitir: (n, d) => eventos.push([n, d]) });
+const nombreEspecial = (eventos) => eventos.filter(([n]) => n === 'especial').map(([, d]) => d.nombre);
+
+test('Gojo: B = Azul, ▶+B = Rojo, ▼+B = Infinito, ▼ ▶ B = Púrpura hueco', () => {
+  for (const [pasos, esperado] of [
+    [[[0, { B: true }]], 'Azul'],
+    [[[0, { der: true }], [0.05, { der: true, B: true }]], 'Rojo'],
+    [[[0, { abajo: true }], [0.05, { abajo: true, B: true }]], 'Infinito'],
+    [[[0, { abajo: true }], [0.1, { der: true }], [0.2, { B: true }]], 'Púrpura hueco'],
+  ]) {
+    const eventos = [];
+    const p = conGojo(eventos);
+    correr(p, 0.5, [guion(pasos), nada]);
+    assert.deepEqual(nombreEspecial(eventos), [esperado]);
+  }
+});
+
+test('Azul de Gojo jala al rival hacia él', () => {
+  const p = conGojo([]);
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 90;
+  a.mira = 1;
+  correr(p, 0.5, [toque('B'), nada]);
+  assert.ok(b.daño > 0, 'le pegó');
+  assert.ok(b.vx < 0, 'lo jala hacia Gojo');
+});
+
+test('Infinito de Gojo: nada lo toca mientras dura', () => {
+  const p = conGojo([]);
+  const [a, b] = p.estado.luchadores;
+  b.x = a.x + 26;
+  b.mira = -1;
+  correr(p, 0.6, [guion([[0, { abajo: true, B: true }]]), guion([[0.15, { A: true }]])]);
+  assert.equal(a.daño, 0);
+});
